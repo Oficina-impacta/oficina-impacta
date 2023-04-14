@@ -1,13 +1,13 @@
 
 # Integrantes:
 
-- RA:    2101168
-- Nome:  Juan Martins Barbosa da Cruz
-- Turma: ADS 5A
+RA:    2101168
+Nome:  Juan Martins Barbosa da Cruz
+Turma: ADS 5A
 
-- RA:    2101094
-- Nome:  Weverton Silva Santos
-- Turma:  ADS 5B 
+RA:    2101094
+Nome:  Weverton Silva Santos
+Turma:  ADS 5B 
 
 
 <h1 align="center"> Oficina Impacta </h1>
