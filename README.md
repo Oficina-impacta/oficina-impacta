@@ -51,3 +51,16 @@ Ao finalizar a instalação, voce pode executar a aplicação, na execução do 
 - [Sqllite3](https://sqlite.org/index.html)
 
 ![oficina'impacta](https://user-images.githubusercontent.com/81659894/231619146-998583d9-4542-477c-a3c1-dab7a932139c.jpg)
+
+
+
+Integrantes:
+
+RA:    2101168
+Nome:  Juan Martins Barbosa da Cruz
+Turma: ADS 5A
+
+RA:    2101094
+Nome:  Weverton Silva Santos
+Turma:  ADS 5B 
+
