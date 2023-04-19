@@ -10,8 +10,11 @@ import pycep_correios
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.w_cadastro_cliente = cadastroWindow()
+
         self.w_cliente = clienteWindow()
+        self.w_cadastro_cliente = cadastroWindow()
+        self.w_produtos = produtoWindow()
+        self.w_cadastro_produto = cadastroProdutoWindow()
         
         self.setWindowTitle("Oficina Impacta")
         self.lbl = QLabel()
@@ -27,8 +30,8 @@ class MainWindow(QMainWindow):
 
         self.button_cliente = QAction('Clientes')
         self.button_cliente.setStatusTip('Cadastro de clientes')
-        self.button_cadastrar_produto = QAction('Cadastrar Produto')
-        self.button_cadastrar_produto.setStatusTip('Cadastrar Produtos')
+        self.button_produtos = QAction('Produtos e Serviços')
+        self.button_produtos.setStatusTip('Produtos e Serviços cadastrados')
         self.button_servico_aberto = QAction('Serviços em Aberto')
         self.button_servico_aberto.setStatusTip('Serviços em Aberto')
         self.button_historico_vendas = QAction('Historico de Vendas')
@@ -39,14 +42,14 @@ class MainWindow(QMainWindow):
         toolbar.addAction(self.button_servico_aberto) 
         toolbar.addAction(self.button_historico_vendas)
         toolbar.addAction(self.button_cadastrar_cliente)
-        toolbar.addAction(self.button_cadastrar_produto)
+        toolbar.addAction(self.button_produtos)
         
 
         
         menu = self.menuBar()
         menu_arquivo = menu.addMenu('Cadastro')
         menu_arquivo.addAction(self.button_cadastrar_cliente)
-        menu_arquivo.addAction(self.button_cadastrar_produto)
+        menu_arquivo.addAction(self.button_produtos)
         menu_arquivo = menu.addMenu('Serviço')
         menu_arquivo.addAction(self.button_servico_aberto)
         menu_arquivo = menu.addMenu('Histórico')
@@ -54,6 +57,7 @@ class MainWindow(QMainWindow):
 
         self.button_cadastrar_cliente.triggered.connect(self.show_cadastroCliente)
         self.button_cliente.triggered.connect(self.show_clienteWindow)
+        self.button_produtos.triggered.connect(self.show_produtosWindow)
         
 
         layout = QVBoxLayout()
@@ -76,6 +80,18 @@ class MainWindow(QMainWindow):
             self.w_cadastro_cliente.hide()
         else:
             self.w_cadastro_cliente.show()
+
+    def show_produtosWindow(self):
+        if  self.w_produtos.isVisible():
+            self.w_produtos.hide()
+        else:
+            self.w_produtos.show()
+    
+    def show_cadastroProduto(self):
+        if  self.w_cadastro_produto.isVisible():
+            self.w_cadastro_produto.hide()
+        else:
+            self.w_cadastro_produto.show()
         
 class cadastroWindow(QMainWindow):
     def __init__(self):
@@ -229,12 +245,6 @@ class clienteWindow(QMainWindow):
         self.setCentralWidget(container)
         self.setFixedSize(QSize(950,800))
 
-    def show_cadastroClientes(self):
-        if  self.w_scadastro_cliente.isVisible():
-            self.w_scadastro_cliente.hide()
-        else:
-            self.w_scadastro_cliente.show()
-    
     def buscar_clientes(self):
         result = self.db.select_all_clientes()
         self.tb_clientes.clearContents()
@@ -243,7 +253,7 @@ class clienteWindow(QMainWindow):
         for row, text in enumerate(result):
             for column, data in enumerate(text):
                 self.tb_clientes.setItem(row, column, QTableWidgetItem(str(data)))
-
+    
     def alterar_clientes(self):
 
         data = []
@@ -252,14 +262,141 @@ class clienteWindow(QMainWindow):
         for row in range(self.tb_clientes.rowCount()):
             for column in range(self.tb_clientes.columnCount()):
                 data.append(self.tb_clientes.item(row, column).text())
+
+    def show_cadastroClientes(self):
+        if  self.w_scadastro_cliente.isVisible():
+            self.w_scadastro_cliente.hide()
+        else:
+            self.w_scadastro_cliente.show()
+
+class produtoWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.w_cadastro_produto = cadastroProdutoWindow()
+
+        self.setWindowTitle("Produtos cadastrados")
+
+        toolbar = QToolBar('toolbar')
+        self.addToolBar(toolbar)
+
+        self.setStatusBar(QStatusBar(self))
+
+        self.bt_cadastrarProduto = QAction('Cadastrar produto ou serviço')
+        self.bt_att_tb_Produto = QAction('Atualizar Tabela')
+        self.bt_alt_dados = QAction('Alterar Dados')
+
+        self.tb_Produtos = QTableWidget()
+        self.tb_Produtos.setColumnCount(4)
+        self.tb_Produtos.setHorizontalHeaderLabels(['COD', 'NOME', 'TIPO', 'PREÇO'])
+
+        self.db = Data_base()
+        self.buscar_produtos()
+
+        self.bt_cadastrarProduto.triggered.connect(self.show_cadastroProduto)
+        self.bt_att_tb_Produto.triggered.connect(self.buscar_produtos)
+        #self.bt_alt_dados.triggered.connect(self.alterar_Produtos)
+        
+        toolbar.addAction(self.bt_cadastrarProduto)
+        toolbar.addAction(self.bt_att_tb_Produto)
+        toolbar.addAction(self.bt_alt_dados)
+
+        layout = QVBoxLayout()
+        layout.addWidget(self.tb_Produtos)
+        
+        container = QWidget()
+        container.setLayout(layout)
+
+
+        self.setCentralWidget(container)
+        self.setFixedSize(QSize(950,800))
+
+    def show_cadastroProduto(self):
+        if  self.w_cadastro_produto.isVisible():
+            self.w_cadastro_produto.hide()
+        else:
+            self.w_cadastro_produto.show()
+    
+    def buscar_produtos(self):
+        result = self.db.select_all_produtos()
+        self.tb_Produtos.clearContents()
+        self.tb_Produtos.setRowCount(len(result))
+
+        for row, text in enumerate(result):
+            for column, data in enumerate(text):
+                self.tb_Produtos.setItem(row, column, QTableWidgetItem(str(data)))
+
+    def alterar_produtos(self):
+
+        data = []
+        update_data = []
+
+        for row in range(self.tb_Produtos.rowCount()):
+            for column in range(self.tb_Produtos.columnCount()):
+                data.append(self.tb_Produtos.item(row, column).text())
         
         update_data.append(data)
         data = []
 
-        for cliente in update_data:
-            result = self.db.update_cliente(tuple(cliente))
+        for produto in update_data:
+            result = self.db.update_produtos(tuple(produto))
         
         self.msg(result[0], result[1])
+
+class cadastroProdutoWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+
+        self.db = Data_base()
+
+        self.setWindowTitle("Cadastro de Produtos e Serviços")
+        toolbar = QToolBar('toolbar')
+        self.addToolBar(toolbar)
+        self.setStatusBar(QStatusBar(self))
+
+        self.button_salvar = QAction('Salvar cadastro')
+        self.button_salvar.setStatusTip('Salvar cadastro de produto ou serviço')
+
+        toolbar.addAction(self.button_salvar)
+
+        self.button_salvar.triggered.connect(self.cadastrar_produto_bd)
+
+        self.lbl_cod = QLabel('Codigo interno: ')
+        self.txt_cod = QLineEdit()
+
+        self.lbl_nome_produto = QLabel('Nome do produto ou serviço: ')
+        self.txt_nome_produto = QLineEdit()
+
+        self.lbl_tipo = QLabel('tipo: ')
+        self.txt_tipo = QLineEdit()
+        
+        self.lbl_preco = QLabel('Preço de venda: ')
+        self.txt_preco = QLineEdit()
+        self.txt_preco.setInputMask("R$ 0000,00")
+
+        layout = QVBoxLayout()
+        layout.addWidget(self.lbl_cod)
+        layout.addWidget(self.txt_cod)
+        layout.addWidget(self.lbl_nome_produto)
+        layout.addWidget(self.txt_nome_produto)
+        layout.addWidget(self.lbl_tipo)
+        layout.addWidget(self.txt_tipo)
+        layout.addWidget(self.lbl_preco)
+        layout.addWidget(self.txt_preco)
+
+        container = QWidget()
+        container.setLayout(layout)
+
+        self.setCentralWidget(container)
+        self.setFixedSize(QSize(600,400))
+
+    def cadastrar_produto_bd(self):
+        
+        fullDataSet = (self.txt_cod.text(), self.txt_nome_produto.text(), self.txt_tipo.text(), self.txt_preco.text())
+        
+        # cadastrar no banco
+        resp = self.db.registro_produtos(fullDataSet)
+
+        self.msg(resp[0], resp[1])
 
     def msg(self, tipo, mensage):
         msgbox = QMessageBox()
@@ -272,11 +409,12 @@ class clienteWindow(QMainWindow):
         
         msgbox.setText(mensage)
         msgbox.exec()
-
+   
 app = QApplication(sys.argv)
 app.setStyle('Fusion')
 db = Data_base()
 db.create_table_clientes()
+db.create_table_produtos()
 w = MainWindow()
 w.show()
 app.exec()
