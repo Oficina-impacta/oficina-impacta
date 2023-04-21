@@ -12,7 +12,7 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         self.w_cliente = clienteWindow()
-        self.w_cadastro_cliente = cadastroWindow()
+        self.w_cadastro_cliente = cadastroClienteWindow()
         self.w_produtos = produtoWindow()
         self.w_cadastro_produto = cadastroProdutoWindow()
         
@@ -93,7 +93,7 @@ class MainWindow(QMainWindow):
         else:
             self.w_cadastro_produto.show()
         
-class cadastroWindow(QMainWindow):
+class cadastroClienteWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
@@ -207,7 +207,7 @@ class cadastroWindow(QMainWindow):
 class clienteWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.w_scadastro_cliente = cadastroWindow()
+        self.w_scadastro_cliente = cadastroClienteWindow()
 
         self.setWindowTitle("Clientes cadastrados")
 
@@ -219,6 +219,7 @@ class clienteWindow(QMainWindow):
         self.bt_cadastrarCliente = QAction('Cadastrar cliente')
         self.bt_att_tb_cliente = QAction('Atualizar Tabela')
         self.bt_alt_dados = QAction('Alterar Dados')
+        self.bt_del_dados = QAction('Deletar cadastro')
 
         self.tb_clientes = QTableWidget()
         self.tb_clientes.setColumnCount(9)
@@ -229,11 +230,13 @@ class clienteWindow(QMainWindow):
 
         self.bt_cadastrarCliente.triggered.connect(self.show_cadastroClientes)
         self.bt_att_tb_cliente.triggered.connect(self.buscar_clientes)
-        self.bt_alt_dados.triggered.connect(self.alterar_clientes)
+        #self.bt_alt_dados.triggered.connect(self.alterar_clientes)
+        self.bt_del_dados.triggered.connect(self.deletar_clientes)
         
         toolbar.addAction(self.bt_cadastrarCliente)
         toolbar.addAction(self.bt_att_tb_cliente)
         toolbar.addAction(self.bt_alt_dados)
+        toolbar.addAction(self.bt_del_dados)
 
         layout = QVBoxLayout()
         layout.addWidget(self.tb_clientes)
@@ -253,21 +256,42 @@ class clienteWindow(QMainWindow):
         for row, text in enumerate(result):
             for column, data in enumerate(text):
                 self.tb_clientes.setItem(row, column, QTableWidgetItem(str(data)))
+
+    def msg(self, tipo, mensage):
+        msgbox = QMessageBox()
+
+        if tipo.lower() == 'ok':
+            msgbox.setIcon(QMessageBox.Information)
+        elif tipo.lower() == 'ERRO':
+            msgbox.setIcon(QMessageBox.Critical)
+        elif tipo.lower() == 'aviso':
+            msgbox.setIcon(QMessageBox.Warning)
+        
+        msgbox.setText(mensage)
+        msgbox.exec()
     
-    def alterar_clientes(self):
-
-        data = []
-        update_data = []
-
-        for row in range(self.tb_clientes.rowCount()):
-            for column in range(self.tb_clientes.columnCount()):
-                data.append(self.tb_clientes.item(row, column).text())
-
     def show_cadastroClientes(self):
         if  self.w_scadastro_cliente.isVisible():
             self.w_scadastro_cliente.hide()
         else:
             self.w_scadastro_cliente.show()
+
+    def deletar_clientes(self):
+
+        msg = QMessageBox()
+        msg.setWindowTitle('Excluir')
+        msg.setText('Este registro será excluído.')
+        msg.setInformativeText('Você tem certeza que deseja continuar?')
+        msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+        resp = msg.exec()
+
+        if resp == QMessageBox.Yes:
+            cpf = self.tb_clientes.selectionModel().currentIndex().siblingAtColumn(1).data()
+            print(cpf)
+            result = self.db.delete_clientes(cpf)
+            self.buscar_clientes()
+
+            self.msg(result[0], result[1])
 
 class produtoWindow(QMainWindow):
     def __init__(self):
@@ -284,6 +308,7 @@ class produtoWindow(QMainWindow):
         self.bt_cadastrarProduto = QAction('Cadastrar produto ou serviço')
         self.bt_att_tb_Produto = QAction('Atualizar Tabela')
         self.bt_alt_dados = QAction('Alterar Dados')
+        self.bt_del_dados = QAction('Deletar Produto ou serviço')
 
         self.tb_Produtos = QTableWidget()
         self.tb_Produtos.setColumnCount(4)
@@ -294,11 +319,12 @@ class produtoWindow(QMainWindow):
 
         self.bt_cadastrarProduto.triggered.connect(self.show_cadastroProduto)
         self.bt_att_tb_Produto.triggered.connect(self.buscar_produtos)
-        #self.bt_alt_dados.triggered.connect(self.alterar_Produtos)
+        self.bt_del_dados.triggered.connect(self.deletar_produtos)
         
         toolbar.addAction(self.bt_cadastrarProduto)
         toolbar.addAction(self.bt_att_tb_Produto)
         toolbar.addAction(self.bt_alt_dados)
+        toolbar.addAction(self.bt_del_dados)
 
         layout = QVBoxLayout()
         layout.addWidget(self.tb_Produtos)
@@ -309,6 +335,19 @@ class produtoWindow(QMainWindow):
 
         self.setCentralWidget(container)
         self.setFixedSize(QSize(950,800))
+
+    def msg(self, tipo, mensage):
+        msgbox = QMessageBox()
+
+        if tipo.lower() == 'ok':
+            msgbox.setIcon(QMessageBox.Information)
+        elif tipo.lower() == 'ERRO':
+            msgbox.setIcon(QMessageBox.Critical)
+        elif tipo.lower() == 'aviso':
+            msgbox.setIcon(QMessageBox.Warning)
+        
+        msgbox.setText(mensage)
+        msgbox.exec()
 
     def show_cadastroProduto(self):
         if  self.w_cadastro_produto.isVisible():
@@ -341,6 +380,23 @@ class produtoWindow(QMainWindow):
             result = self.db.update_produtos(tuple(produto))
         
         self.msg(result[0], result[1])
+
+    def deletar_produtos(self):
+
+        msg = QMessageBox()
+        msg.setWindowTitle('Excluir')
+        msg.setText('Este registro será excluído.')
+        msg.setInformativeText('Você tem certeza que deseja continuar?')
+        msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+        resp = msg.exec()
+
+        if resp == QMessageBox.Yes:
+            cod = self.tb_Produtos.selectionModel().currentIndex().siblingAtColumn(0).data()
+            print(cod)
+            result = self.db.delete_produtos(cod)
+            self.buscar_produtos()
+
+            self.msg(result[0], result[1])
 
 class cadastroProdutoWindow(QMainWindow):
     def __init__(self):

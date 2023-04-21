@@ -124,7 +124,7 @@ class Data_base:
         finally:
             self.close_connection()
 
-    #função deletar
+    #função deletar clientes
     def delete_clientes(self, cpf):
 
         try:
@@ -132,9 +132,23 @@ class Data_base:
             cursor = self.connection.cursor()
             cursor.execute(f"DELETE  FROM Clientes WHERE CPF = '{cpf}'")
             self.connection.commit()
-            return "OK"
+            return 'OK', 'Cliente deletado com sucesso!' 
         except Exception as e:
-            print(e)
+            return 'erro', str(e)
+        finally:
+            self.close_connection()
+
+    #função deletar produtos
+    def delete_produtos(self, cod):
+
+        try:
+            self.connect()
+            cursor = self.connection.cursor()
+            cursor.execute(f"DELETE  FROM Produtos WHERE COD = '{cod}'")
+            self.connection.commit()
+            return 'OK', 'Produto ou serviço deletado com sucesso!' 
+        except Exception as e:
+            return 'erro', str(e)
         finally:
             self.close_connection()
 
