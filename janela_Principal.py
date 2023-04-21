@@ -6,11 +6,50 @@ from PySide6.QtWidgets import *
 from database import Data_base
 # import pandas as pd
 import pycep_correios
-import re
+
+
+class LoginWindow(QDialog):
+    def __init__(self):
+        super().__init__()
+
+        # widgets de entrada de nome de usuário e senha
+        self.username_input = QLineEdit()
+        self.password_input = QLineEdit()
+        self.password_input.setEchoMode(QLineEdit.Password)
+
+        # botão de login
+        self.login_button = QPushButton("Login")
+
+        # layout
+        layout = QVBoxLayout()
+        layout.addWidget(QLabel("Nome de usuário:"))
+        layout.addWidget(self.username_input)
+        layout.addWidget(QLabel("Senha:"))
+        layout.addWidget(self.password_input)
+        layout.addWidget(self.login_button)
+        self.setLayout(layout)
+
+        # conectar o botão de login à verificação de login
+        self.login_button.clicked.connect(self.check_login)
+
+    def check_login(self):
+        # verifique se o nome de usuário e a senha estão corretos
+        username = self.username_input.text()
+        password = self.password_input.text()
+        if username == "admin" and password == "admin":
+            # fecha a tela de login e abre a janela principal
+            self.done(QDialog.Accepted)
+        else:
+            QMessageBox.warning(self, "Login incorreto", "Nome de usuário ou senha incorretos. Tente novamente.")
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+
+        # cria a tela de login
+        self.login_window = LoginWindow()
+        self.login_window.exec_()
 
         self.w_cliente = clienteWindow()
         self.w_cadastro_cliente = cadastroClienteWindow()
