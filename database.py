@@ -1,4 +1,5 @@
 import sqlite3
+import re
 # #Criando o Banco de Dados:
 # FUNÇÃO CRIANDO BANCO DE DADOS
 
@@ -152,58 +153,47 @@ class Data_base:
         finally:
             self.close_connection()
 
-    #função update;; atualizar tabela
-    def update_cliente(self, fullDataSet):
+    
 
+    def update_clientes(self, nome, telefone, cep, logradouro, numero, complemento, bairro, cidade, cpf):
         self.connect()
 
         try:
             cursor = self.connection.cursor()
-            cursor.execute(f""" UPDATE CLIENTES SET
-
-                            NOME = '{fullDataSet[0]}',
-                            CPF = '{fullDataSet[1]}',
-                            TELEFONE = '{fullDataSet[2]}',
-                            CEP = '{fullDataSet[3]}',
-                            LOGRADOURO = '{fullDataSet[4]}',
-                            NUMERO = '{fullDataSet[5]}',
-                            COMPLEMENTO = '{fullDataSet[6]}',
-                            BAIRRO = '{fullDataSet[7]}',
-                            CIDADE = '{fullDataSet[8]}'
-
-                            WHERE CPF = '{fullDataSet[1]}'""")
+            nome = (nome)
+            telefone = (telefone)
+            cep = (cep)
+            logradouro = (logradouro)
+            numero = (numero)
+            complemento = (complemento)
+            bairro = (bairro)
+            cidade = (cidade)
+            cursor.execute("""UPDATE CLIENTES SET NOME = ?, TELEFONE = ?, CEP = ?, LOGRADOURO = ?, NUMERO = ?, 
+                  COMPLEMENTO = ?, BAIRRO = ?, CIDADE = ? WHERE CPF = ?""",
+               (nome, telefone, cep, logradouro, numero, complemento, bairro, cidade, cpf))
             self.connection.commit()
-            print('ok aqui')
             return 'OK', 'Dados atualizados com sucesso!'
         except Exception as e:
             return 'erro', str(e)
         finally:
-                self.close_connection
+            self.close_connection()
 
-    def update_produtos(self, fullDataSet):
+          
 
+    def update_produtos(self, COD, NOME, TIPO, PRECO):
         self.connect()
 
         try:
             cursor = self.connection.cursor()
-            cursor.execute(f""" UPDATE CLIENTES SET
-
-                            NOME = '{fullDataSet[0]}',
-                            CPF = '{fullDataSet[1]}',
-                            TELEFONE = '{fullDataSet[2]}',
-                            CEP = '{fullDataSet[3]}',
-                            LOGRADOURO = '{fullDataSet[4]}',
-                            NUMERO = '{fullDataSet[5]}',
-                            COMPLEMENTO = '{fullDataSet[6]}',
-                            BAIRRO = '{fullDataSet[7]}',
-                            CIDADE = '{fullDataSet[8]}'
-
-                            WHERE CPF = '{fullDataSet[1]}'""")
+            COD = (COD)            
+            NOME = (NOME)
+            TIPO = (TIPO)
+            PRECO = (PRECO)            
+            cursor.execute("""UPDATE Produtos SET COD = ?, NOME = ?, TIPO = ?, PRECO = ?""",
+               (COD, NOME, TIPO, PRECO))
             self.connection.commit()
-            print('ok aqui')
             return 'OK', 'Dados atualizados com sucesso!'
         except Exception as e:
             return 'erro', str(e)
         finally:
-                self.close_connection
-
+            self.close_connection()
