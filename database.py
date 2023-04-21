@@ -65,7 +65,14 @@ class Data_base:
         campos_tabela = ('NOME','CPF','TELEFONE','CEP','LOGRADOURO','NUMERO',
         'COMPLEMENTO','BAIRRO','CIDADE')
         qntd = ("?,?,?,?,?,?,?,?,?")
-        cursor = self.connection.cursor()
+        cursor = self.connection.cursor()        
+        #VERIFICAR SE O CPF JÁ EXISTE
+        cpf = fullDataSet[1]
+        cursor.execute("SELECT CPF FROM Clientes WHERE CPF=?", (cpf,))
+        cpf_existente = cursor.fetchone()
+        if cpf_existente:
+          # CPF já existe, retornar erro
+          return 'erro', 'CPF já cadastrado.'
         #REGISTRAR OS DADOS
         try:
             cursor.execute(f"""INSERT INTO Clientes {campos_tabela}
@@ -80,6 +87,7 @@ class Data_base:
         finally:
             self.close_connection()
 
+    # Função para registar os dados da tela de cadastro_produtos
     def registro_produtos(self, fullDataSet):
 
         self.connect()
@@ -100,7 +108,7 @@ class Data_base:
         finally:
             self.close_connection()
 
-    #função selecionar
+    #Função selecionar
     def select_all_clientes(self):
         try:
             self.connect()
@@ -125,7 +133,7 @@ class Data_base:
         finally:
             self.close_connection()
 
-    #função deletar clientes
+    #Função deletar clientes
     def delete_clientes(self, cpf):
 
         try:
@@ -139,7 +147,7 @@ class Data_base:
         finally:
             self.close_connection()
 
-    #função deletar produtos
+    #Função deletar produtos
     def delete_produtos(self, cod):
 
         try:
@@ -154,7 +162,7 @@ class Data_base:
             self.close_connection()
 
     
-
+    #Função para atualizar dados dos registro da tabela clientes
     def update_clientes(self, nome, telefone, cep, logradouro, numero, complemento, bairro, cidade, cpf):
         self.connect()
 
@@ -172,14 +180,14 @@ class Data_base:
                   COMPLEMENTO = ?, BAIRRO = ?, CIDADE = ? WHERE CPF = ?""",
                (nome, telefone, cep, logradouro, numero, complemento, bairro, cidade, cpf))
             self.connection.commit()
-            return 'OK', 'Dados atualizados com sucesso!'
+            return 'OK', 'Dados atualizados com sucesso!'            
         except Exception as e:
             return 'erro', str(e)
         finally:
             self.close_connection()
 
           
-
+    #Função para atualizar dados dos registro da tabela produtos
     def update_produtos(self, COD, NOME, TIPO, PRECO):
         self.connect()
 
