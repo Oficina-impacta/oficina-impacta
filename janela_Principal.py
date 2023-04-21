@@ -4,8 +4,9 @@ from PySide6.QtCore import QSize, Qt
 from PySide6 import QtCore
 from PySide6.QtWidgets import *
 from database import Data_base
-import pandas as pd
+# import pandas as pd
 import pycep_correios
+import re
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -230,7 +231,7 @@ class clienteWindow(QMainWindow):
 
         self.bt_cadastrarCliente.triggered.connect(self.show_cadastroClientes)
         self.bt_att_tb_cliente.triggered.connect(self.buscar_clientes)
-        #self.bt_alt_dados.triggered.connect(self.alterar_clientes)
+        self.bt_alt_dados.triggered.connect(self.alterar_clientes)
         self.bt_del_dados.triggered.connect(self.deletar_clientes)
         
         toolbar.addAction(self.bt_cadastrarCliente)
@@ -293,6 +294,82 @@ class clienteWindow(QMainWindow):
 
             self.msg(result[0], result[1])
 
+    def alterar_clientes(self):
+    # Obtém o índice da linha selecionada na tabela
+      row = self.tb_clientes.currentRow()
+
+      if row == -1:
+        QMessageBox.warning(self, 'Erro', 'Por favor, selecione um cliente para alterar.')
+        return
+
+      # Obtém os dados da linha selecionada
+      cpf = self.tb_clientes.item(row, 1).text()
+      nome = self.tb_clientes.item(row, 0).text()
+      telefone = self.tb_clientes.item(row, 2).text()
+      cep = self.tb_clientes.item(row, 3).text()
+      logradouro = self.tb_clientes.item(row, 4).text()
+      numero = self.tb_clientes.item(row, 5).text()
+      complemento = self.tb_clientes.item(row, 6).text()
+      bairro = self.tb_clientes.item(row, 7).text()
+      cidade = self.tb_clientes.item(row, 8).text()
+
+      # Cria a janela de diálogo para alterar os dados
+      dialog = QDialog(self)
+      dialog.setWindowTitle('Alterar dados do cliente')
+      dialog.setModal(True)
+
+      # Adiciona os campos de texto para o usuário preencher os dados
+      layout = QFormLayout(dialog)
+      txt_nome = QLineEdit(nome)
+      txt_telefone = QLineEdit(telefone)
+      txt_cep = QLineEdit(cep)
+      txt_logradouro = QLineEdit(logradouro)
+      txt_numero = QLineEdit(numero)
+      txt_complemento = QLineEdit(complemento)
+      txt_bairro = QLineEdit(bairro)
+      txt_cidade = QLineEdit(cidade)
+      layout.addRow('Nome:', txt_nome)
+      layout.addRow('Telefone:', txt_telefone)
+      layout.addRow('CEP:', txt_cep)
+      layout.addRow('Logradouro:', txt_logradouro)
+      layout.addRow('Número:', txt_numero)
+      layout.addRow('Complemento:', txt_complemento)
+      layout.addRow('Bairro:', txt_bairro)
+      layout.addRow('Cidade:', txt_cidade)
+
+      # Adiciona os botões OK e Cancelar
+      btn_ok = QPushButton('OK')
+      btn_cancel = QPushButton('Cancelar')
+      btn_ok.clicked.connect(dialog.accept)
+      btn_cancel.clicked.connect(dialog.reject)
+      btn_layout = QHBoxLayout()
+      btn_layout.addWidget(btn_ok)
+      btn_layout.addWidget(btn_cancel)
+      layout.addRow(btn_layout)
+
+      # Exibe a janela de diálogo e verifica se o usuário clicou em OK
+      if dialog.exec() == QDialog.Accepted:
+        # Obtém os dados preenchidos pelo usuário
+        nome = txt_nome.text()
+        telefone = txt_telefone.text()
+        cep = txt_cep.text()
+        logradouro = txt_logradouro.text()
+        numero = txt_numero.text()
+        complemento = txt_complemento.text()
+        bairro = txt_bairro.text()
+        cidade = txt_cidade.text()
+        
+        
+        # Chama a função update_clientes() com os dados do cliente
+        result = self.db.update_clientes(nome, telefone, cep, logradouro, numero, complemento, bairro, cidade, cpf)
+        # Verifica se a atualização foi bem sucedida
+        if result[0] == 'OK':          
+            QApplication.processEvents()
+            QMessageBox.information(self, 'Sucesso', 'Dados atualizados com sucesso.')
+        
+        
+     
+     
 class produtoWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -312,13 +389,14 @@ class produtoWindow(QMainWindow):
 
         self.tb_Produtos = QTableWidget()
         self.tb_Produtos.setColumnCount(4)
-        self.tb_Produtos.setHorizontalHeaderLabels(['COD', 'NOME', 'TIPO', 'PREÇO'])
+        self.tb_Produtos.setHorizontalHeaderLabels(['COD', 'NOME', 'TIPO', 'PRECO'])
 
         self.db = Data_base()
         self.buscar_produtos()
 
         self.bt_cadastrarProduto.triggered.connect(self.show_cadastroProduto)
         self.bt_att_tb_Produto.triggered.connect(self.buscar_produtos)
+        self.bt_alt_dados.triggered.connect(self.alterar_produtos)
         self.bt_del_dados.triggered.connect(self.deletar_produtos)
         
         toolbar.addAction(self.bt_cadastrarProduto)
@@ -364,22 +442,6 @@ class produtoWindow(QMainWindow):
             for column, data in enumerate(text):
                 self.tb_Produtos.setItem(row, column, QTableWidgetItem(str(data)))
 
-    def alterar_produtos(self):
-
-        data = []
-        update_data = []
-
-        for row in range(self.tb_Produtos.rowCount()):
-            for column in range(self.tb_Produtos.columnCount()):
-                data.append(self.tb_Produtos.item(row, column).text())
-        
-        update_data.append(data)
-        data = []
-
-        for produto in update_data:
-            result = self.db.update_produtos(tuple(produto))
-        
-        self.msg(result[0], result[1])
 
     def deletar_produtos(self):
 
@@ -397,6 +459,68 @@ class produtoWindow(QMainWindow):
             self.buscar_produtos()
 
             self.msg(result[0], result[1])
+
+    def alterar_produtos(self):
+    # Obtém o índice da linha selecionada na tabela
+      row = self.tb_Produtos.currentRow()
+
+      if row == -1:
+        QMessageBox.warning(self, 'Erro', 'Por favor, selecione um produto para alterar.')
+        return
+
+      # Obtém os dados da linha selecionada
+      COD = self.tb_Produtos.item(row, 1).text()
+      NOME = self.tb_Produtos.item(row, 0).text()
+      TIPO = self.tb_Produtos.item(row, 2).text()
+      PRECO = self.tb_Produtos.item(row, 3).text()
+
+      # Cria a janela de diálogo para alterar os dados
+      dialog = QDialog(self)
+      dialog.setWindowTitle('Alterar produtos')
+      dialog.setModal(True)
+
+
+      # Adiciona os campos de texto para o usuário preencher os dados
+      layout = QFormLayout(dialog)
+      txt_COD = QLineEdit(COD)
+      txt_NOME = QLineEdit(NOME)
+      txt_TIPO = QLineEdit(TIPO)
+      txt_PRECO = QLineEdit(PRECO)
+      layout.addRow('COD:', txt_COD)
+      layout.addRow('NOME:', txt_NOME)
+      layout.addRow('TIPO:', txt_TIPO)
+      layout.addRow('PRECO:', txt_PRECO)
+
+      # Adiciona os botões OK e Cancelar
+      btn_ok = QPushButton('OK')
+      btn_cancel = QPushButton('Cancelar')
+      btn_ok.clicked.connect(dialog.accept)
+      btn_cancel.clicked.connect(dialog.reject)
+      btn_layout = QHBoxLayout()
+      btn_layout.addWidget(btn_ok)
+      btn_layout.addWidget(btn_cancel)
+      layout.addRow(btn_layout)
+
+ # Exibe a janela de diálogo e verifica se o usuário clicou em OK
+      if dialog.exec() == QDialog.Accepted:
+        # Obtém os dados preenchidos pelo usuário
+        COD = txt_COD.text()
+        NOME = txt_NOME.text()
+        TIPO = txt_TIPO.text()
+        PRECO = txt_PRECO.text()
+        
+        
+        # Chama a função update_clientes() com os dados do cliente
+        result = self.db.update_produtos(COD, NOME, TIPO, PRECO)
+        # Verifica se a atualização foi bem sucedida
+        print(result[0])
+        if result[0] == 'OK':                      
+            QMessageBox.information(self, 'Sucesso', 'Dados atualizados com sucesso.')
+        else:
+            QMessageBox.warning(self, 'Erro', result[1])
+        print(result[1])
+
+
 
 class cadastroProdutoWindow(QMainWindow):
     def __init__(self):
