@@ -41,15 +41,22 @@ class LoginWindow(QDialog):
             self.done(QDialog.Accepted)
         else:
             QMessageBox.warning(self, "Login incorreto", "Nome de usuário ou senha incorretos. Tente novamente.")
+            self.reject()
 
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        # cria a tela de login
+     # cria a tela de login
         self.login_window = LoginWindow()
-        self.login_window.exec_()
+        result = self.login_window.exec_()
+        if result == QDialog.Accepted:
+            # abre a janela principal
+            self.show()
+        else:
+            # encerra o programa
+            sys.exit()
 
         self.w_cliente = clienteWindow()
         self.w_cadastro_cliente = cadastroClienteWindow()
@@ -315,6 +322,7 @@ class clienteWindow(QMainWindow):
             self.w_scadastro_cliente.hide()
         else:
             self.w_scadastro_cliente.show()
+            
 
     def deletar_clientes(self):
 
@@ -549,7 +557,7 @@ class produtoWindow(QMainWindow):
         PRECO = txt_PRECO.text()
         
         
-        # Chama a função update_clientes() com os dados do cliente
+        # Chama a função update_produtos() com os dados do cliente
         result = self.db.update_produtos(COD, NOME, TIPO, PRECO)
         # Verifica se a atualização foi bem sucedida
         print(result[0])
