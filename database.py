@@ -1,8 +1,8 @@
 import sqlite3
 import re
 # #Criando o Banco de Dados:
-# FUNÇÃO CRIANDO BANCO DE DADOS
 
+# FUNÇÃO CRIANDO BANCO DE DADOS
 class Data_base:
 
     def __init__(self, name= 'system.db') -> None:
@@ -58,34 +58,67 @@ class Data_base:
                             """)
         self.close_connection()
 
-    #função registrar no banco de dados
-    def registro_clientes(self, fullDataSet):
+    #Função registrar no banco de dados
+    # def registro_clientes(self, fullDataSet):
 
-        self.connect()
-        campos_tabela = ('NOME','CPF','TELEFONE','CEP','LOGRADOURO','NUMERO',
-        'COMPLEMENTO','BAIRRO','CIDADE')
-        qntd = ("?,?,?,?,?,?,?,?,?")
-        cursor = self.connection.cursor()        
-        #VERIFICAR SE O CPF JÁ EXISTE
-        cpf = fullDataSet[1]
-        cursor.execute("SELECT CPF FROM Clientes WHERE CPF=?", (cpf,))
-        cpf_existente = cursor.fetchone()
-        if cpf_existente:
-          # CPF já existe, retornar erro
-          return 'erro', 'CPF já cadastrado.'
-        #REGISTRAR OS DADOS
-        try:
-            cursor.execute(f"""INSERT INTO Clientes {campos_tabela}
+    #     self.connect()
+    #     campos_tabela = ('NOME','CPF','TELEFONE','CEP','LOGRADOURO','NUMERO',
+    #     'COMPLEMENTO','BAIRRO','CIDADE')
+    #     qntd = ("?,?,?,?,?,?,?,?,?")
+    #     cursor = self.connection.cursor()        
+    #     #VERIFICAR SE O CPF JÁ EXISTE
+    #     cpf = fullDataSet[1]
+    #     cursor.execute("SELECT CPF FROM Clientes WHERE CPF=?", (cpf,))
+    #     cpf_existente = cursor.fetchone()
+    #     if cpf_existente:
+    #       # CPF já existe, retornar erro
+    #       return 'erro', 'CPF já cadastrado.'    
 
-                    VALUES ({qntd})""", fullDataSet)
-            self.connection.commit()
-            return "OK", "Cliente cadastrado com sucesso!"
-        except Exception as e:
-            print(e)
-            return 'erro', str(e)
+    #     #REGISTRAR OS DADOS
+    #     try:
+    #         cursor.execute(f"""INSERT INTO Clientes {campos_tabela}
 
-        finally:
-            self.close_connection()
+    #                 VALUES ({qntd})""", fullDataSet)
+    #         self.connection.commit()
+    #         return "OK", "Cliente cadastrado com sucesso!"
+    #     except Exception as e:
+    #         print(e)
+    #         return 'erro', str(e)
+
+    #     finally:
+    #         self.close_connection()
+
+    def registro_clientes(self, fullDataSet):      
+      self.connect()
+      campos_tabela = ('NOME','CPF','TELEFONE','CEP','LOGRADOURO','NUMERO',
+                     'COMPLEMENTO','BAIRRO','CIDADE')
+      qntd = ("?,?,?,?,?,?,?,?,?")
+      cursor = self.connection.cursor()        
+    
+    # Verificar se o CPF está vazio ou é inválido
+      cpf = fullDataSet[1]
+      print("Valor de cpf:", cpf)
+      if not cpf or len(cpf) != 14:
+        return 'erro', 'CPF é obrigatório e deve ter 11 caracteres.'
+    
+    #VERIFICAR SE O CPF JÁ EXISTE
+      cursor.execute("SELECT CPF FROM Clientes WHERE CPF=?", (cpf,))
+      cpf_existente = cursor.fetchone()
+      if cpf_existente:
+        # CPF já existe, retornar erro
+        return 'erro', 'CPF já cadastrado.'    
+
+    #REGISTRAR OS DADOS
+      try:
+          cursor.execute(f"""INSERT INTO Clientes {campos_tabela}
+                            VALUES ({qntd})""", fullDataSet)
+          self.connection.commit()
+          return "OK", "Cliente cadastrado com sucesso!"
+      except Exception as e:
+        print(e)
+        return 'erro', str(e)
+      finally:
+        self.close_connection()
 
     # Função para registar os dados da tela de cadastro_produtos
     def registro_produtos(self, fullDataSet):
