@@ -58,36 +58,8 @@ class Data_base:
                             """)
         self.close_connection()
 
+    
     #Função registrar no banco de dados
-    # def registro_clientes(self, fullDataSet):
-
-    #     self.connect()
-    #     campos_tabela = ('NOME','CPF','TELEFONE','CEP','LOGRADOURO','NUMERO',
-    #     'COMPLEMENTO','BAIRRO','CIDADE')
-    #     qntd = ("?,?,?,?,?,?,?,?,?")
-    #     cursor = self.connection.cursor()        
-    #     #VERIFICAR SE O CPF JÁ EXISTE
-    #     cpf = fullDataSet[1]
-    #     cursor.execute("SELECT CPF FROM Clientes WHERE CPF=?", (cpf,))
-    #     cpf_existente = cursor.fetchone()
-    #     if cpf_existente:
-    #       # CPF já existe, retornar erro
-    #       return 'erro', 'CPF já cadastrado.'    
-
-    #     #REGISTRAR OS DADOS
-    #     try:
-    #         cursor.execute(f"""INSERT INTO Clientes {campos_tabela}
-
-    #                 VALUES ({qntd})""", fullDataSet)
-    #         self.connection.commit()
-    #         return "OK", "Cliente cadastrado com sucesso!"
-    #     except Exception as e:
-    #         print(e)
-    #         return 'erro', str(e)
-
-    #     finally:
-    #         self.close_connection()
-
     def registro_clientes(self, fullDataSet):      
       self.connect()
       campos_tabela = ('NOME','CPF','TELEFONE','CEP','LOGRADOURO','NUMERO',
@@ -127,6 +99,8 @@ class Data_base:
         campos_tabela = ('COD', 'NOME', 'TIPO', 'PRECO')
         qntd = ("?,?,?,?")
         cursor = self.connection.cursor()
+        if fullDataSet[0] == '':
+            return 'erro', 'O campo COD é obrigatório.'
         #REGISTRAR OS DADOS
         try:
             cursor.execute(f"""INSERT INTO Produtos {campos_tabela}

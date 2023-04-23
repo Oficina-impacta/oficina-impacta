@@ -8,6 +8,10 @@ from database import Data_base
 import pycep_correios
 
 
+
+
+
+
 class LoginWindow(QDialog):
     def __init__(self):
         super().__init__()
@@ -236,8 +240,19 @@ class cadastroClienteWindow(QMainWindow):
         )
         # cadastrar no banco
         resp = self.db.registro_clientes(fullDataSet)
-
+        # exibir mensagem de sucesso ou erro
         self.msg(resp[0], resp[1])
+         # Limpar campos de entrada de dados
+        self.txt_nome.setText('')
+        self.txt_cpf.setText('')
+        self.txt_telefone.setText('')
+        self.txt_inf_cep.setText('')
+        self.txt_logradouro.setText('')
+        self.txt_numero_res.setText('')
+        self.txt_complemento.setText('')
+        self.txt_bairro.setText('')
+        self.txt_cidade.setText('')
+        
 
     def msg(self, tipo, mensage):
         msgbox = QMessageBox()
@@ -325,7 +340,9 @@ class clienteWindow(QMainWindow):
             
 
     def deletar_clientes(self):
-
+        if not self.tb_clientes.selectedIndexes():
+          QMessageBox.warning(self, "Erro", "Nenhum registro selecionado!")
+          return
         msg = QMessageBox()
         msg.setWindowTitle('Excluir')
         msg.setText('Este registro será excluído.')
@@ -340,6 +357,10 @@ class clienteWindow(QMainWindow):
             self.buscar_clientes()
 
             self.msg(result[0], result[1])
+        else:
+            self.msg('erro', 'Exclusão cancelada pelo usuário.')
+
+    
 
     def alterar_clientes(self):
     # Obtém o índice da linha selecionada na tabela
@@ -491,6 +512,9 @@ class produtoWindow(QMainWindow):
 
 
     def deletar_produtos(self):
+        if not self.tb_Produtos.selectedIndexes():
+          QMessageBox.warning(self, "Erro", "Nenhum registro selecionado!")
+          return
 
         msg = QMessageBox()
         msg.setWindowTitle('Excluir')
@@ -505,7 +529,8 @@ class produtoWindow(QMainWindow):
             result = self.db.delete_produtos(cod)
             self.buscar_produtos()
 
-            self.msg(result[0], result[1])
+            self.msg(result[0], result[1])            
+       
 
     def alterar_produtos(self):
     # Obtém o índice da linha selecionada na tabela
@@ -516,8 +541,8 @@ class produtoWindow(QMainWindow):
         return
 
       # Obtém os dados da linha selecionada
-      COD = self.tb_Produtos.item(row, 1).text()
-      NOME = self.tb_Produtos.item(row, 0).text()
+      COD = self.tb_Produtos.item(row, 0).text()
+      NOME = self.tb_Produtos.item(row, 1).text()
       TIPO = self.tb_Produtos.item(row, 2).text()
       PRECO = self.tb_Produtos.item(row, 3).text()
 
@@ -529,7 +554,7 @@ class produtoWindow(QMainWindow):
 
       # Adiciona os campos de texto para o usuário preencher os dados
       layout = QFormLayout(dialog)
-      txt_COD = QLineEdit(COD)
+      txt_COD = QLineEdit(str(COD))
       txt_NOME = QLineEdit(NOME)
       txt_TIPO = QLineEdit(TIPO)
       txt_PRECO = QLineEdit(PRECO)
@@ -617,13 +642,21 @@ class cadastroProdutoWindow(QMainWindow):
         self.setFixedSize(QSize(600,400))
 
     def cadastrar_produto_bd(self):
-        
+    
         fullDataSet = (self.txt_cod.text(), self.txt_nome_produto.text(), self.txt_tipo.text(), self.txt_preco.text())
-        
+    
         # cadastrar no banco
         resp = self.db.registro_produtos(fullDataSet)
 
         self.msg(resp[0], resp[1])
+    
+        # Limpa os campos após cadastrar
+        self.txt_cod.clear()
+        self.txt_nome_produto.clear()
+        self.txt_tipo.clear()
+        self.txt_preco.clear()
+
+        
 
     def msg(self, tipo, mensage):
         msgbox = QMessageBox()
