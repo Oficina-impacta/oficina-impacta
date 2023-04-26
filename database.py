@@ -64,12 +64,12 @@ class Data_base:
         cursor.execute("""
 
                         CREATE TABLE IF NOT EXISTS Veiculos(
-       placa TEXT,                     
-       cpf TEXT,
-       marca TEXT,
-       modelo TEXT,
-       cor TEXT,
-       Ano TEXT,
+       PLACA TEXT,                     
+       CPF TEXT,
+       MARCA TEXT,
+       MODELO TEXT,
+       COR TEXT,
+       ANO TEXT,
 
        PRIMARY KEY (cpf)
        );
@@ -77,7 +77,6 @@ class Data_base:
                             """)
         self.close_connection()
 
-    
     #Função registrar no banco de dados
     def registro_clientes(self, fullDataSet):      
       self.connect()
@@ -156,7 +155,6 @@ class Data_base:
 
         finally:
             self.close_connection()
-        
 
     #Função selecionar Clientes
     def select_all_clientes(self):
@@ -185,18 +183,17 @@ class Data_base:
             self.close_connection()
 
 #Função selecionar Veiculos
-    def select_all_Veiculos(self):
+    def select_all_veiculos(self):
         try:
             self.connect()
             cursor = self.connection.cursor()
-            cursor.execute("SELECT * FROM Veiculos ORDER BY COD")
+            cursor.execute("SELECT * FROM Veiculos ORDER BY PLACA")
             veiculos = cursor.fetchall()
             return veiculos
         except Exception as e:
             print(e)
         finally:
             self.close_connection()
-
 
     #Função deletar clientes
     def delete_clientes(self, cpf):
@@ -232,7 +229,7 @@ class Data_base:
         try:
             self.connect()
             cursor = self.connection.cursor()
-            cursor.execute(f"DELETE  FROM Veiculos WHERE COD = '{placa}'")
+            cursor.execute(f"DELETE  FROM Veiculos WHERE PLACA = '{placa}'")
             self.connection.commit()
             return 'OK', 'Veiculo deletado com sucesso!' 
         except Exception as e:
@@ -240,8 +237,6 @@ class Data_base:
         finally:
             self.close_connection()
 
-
-    
     #Função para atualizar dados dos registro da tabela clientes
     def update_clientes(self, nome, telefone, cep, logradouro, numero, complemento, bairro, cidade, cpf):
         self.connect()
@@ -265,8 +260,7 @@ class Data_base:
             return 'erro', str(e)
         finally:
             self.close_connection()
-
-          
+ 
     #Função para atualizar dados dos registro da tabela produtos
     def update_produtos(self, COD, NOME, TIPO, PRECO):
         self.connect()
@@ -287,7 +281,8 @@ class Data_base:
             self.close_connection()
 
       #Função para atualizar dados dos registro da tabela veiculos
-    def update_produtos(self, placa, cpf, marca, modelo, cor, ano):
+
+    def update_veiculos(self, placa, cpf, marca, modelo, cor, ano):
         self.connect()
 
         try:

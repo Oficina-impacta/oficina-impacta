@@ -43,14 +43,13 @@ class LoginWindow(QDialog):
             QMessageBox.warning(self, "Login incorreto", "Nome de usuário ou senha incorretos. Tente novamente.")
             self.reject()
 
-
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
      # cria a tela de login
         self.login_window = LoginWindow()
-        result = self.login_window.exec_()
+        result = self.login_window.exec()
         if result == QDialog.Accepted:
             # abre a janela principal
             self.show()
@@ -79,8 +78,14 @@ class MainWindow(QMainWindow):
 
         self.button_cliente = QAction('Clientes')
         self.button_cliente.setStatusTip('Cadastro de clientes')
+        self.button_cadastrar_cliente = QAction('Cadastrar clientes')
+        self.button_cadastrar_cliente.setStatusTip('Cadastro de clientes')
         self.button_produtos = QAction('Produtos e Serviços')
         self.button_produtos.setStatusTip('Produtos e Serviços cadastrados')
+        self.button_cadastro_produto = QAction('Cadastrar produtos e serviços')
+        self.button_cadastro_produto.setStatusTip('Cadastrar produtos e serviços')
+        self.button_veiculos = QAction('Veículos')
+        self.button_veiculos.setStatusTip('Cadastro de veículos')
         self.button_cadastrar_veiculos = QAction('Cadastrar Veículos')
         self.button_cadastrar_veiculos.setStatusTip('Cadastro de Veículos')
         self.button_servico_aberto = QAction('Serviços em Aberto')
@@ -89,26 +94,29 @@ class MainWindow(QMainWindow):
         self.button_historico_vendas.setStatusTip('Historico de Vendas')
 
         toolbar.addAction(self.button_cliente)
+        toolbar.addAction(self.button_produtos)
+        toolbar.addAction(self.button_veiculos)
         toolbar.addAction(self.button_servico_aberto) 
         toolbar.addAction(self.button_historico_vendas)
-        toolbar.addAction(self.button_cadastrar_veiculos)
-        toolbar.addAction(self.button_produtos)
-        
-
         
         menu = self.menuBar()
         menu_arquivo = menu.addMenu('Cadastro')
         menu_arquivo.addAction(self.button_cadastrar_cliente)
         menu_arquivo.addAction(self.button_produtos)
+        menu_arquivo.addAction(self.button_veiculos)
         menu_arquivo = menu.addMenu('Serviço')
         menu_arquivo.addAction(self.button_servico_aberto)
         menu_arquivo = menu.addMenu('Histórico')
         menu_arquivo.addAction(self.button_historico_vendas)
 
-        #self.button_cadastrar_cliente.triggered.connect(self.show_cadastroCliente)
         self.button_cliente.triggered.connect(self.show_clienteWindow)
+        self.button_cadastrar_cliente.triggered.connect(self.show_cadastroCliente)
+        
         self.button_produtos.triggered.connect(self.show_produtosWindow)
-        self.button_produtos.triggered.connect(self.show_produtosWindow)
+        self.button_cadastro_produto.triggered.connect(self.show_cadastroProduto)
+
+        self.button_veiculos.triggered.connect(self.show_veiculosWindow)
+        self.button_cadastrar_veiculos.triggered.connect(self.show_cadastro_veiculo)
         
 
         layout = QVBoxLayout()
@@ -143,6 +151,18 @@ class MainWindow(QMainWindow):
             self.w_cadastro_produto.hide()
         else:
             self.w_cadastro_produto.show()
+
+    def show_veiculosWindow(self):
+        if  self.w_veiculo.isVisible():
+            self.w_veiculo.hide()
+        else:
+            self.w_veiculo.show()
+
+    def show_cadastro_veiculo(self):
+        if  self.w_cadastro_veiculo.isVisible():
+            self.w_cadastro_veiculo.hide()
+        else:
+            self.w_cadastro_veiculo.show()
 
 class clienteWindow(QMainWindow):
     def __init__(self):
@@ -525,7 +545,6 @@ class produtoWindow(QMainWindow):
 
             self.msg(result[0], result[1])            
        
-
     def alterar_produtos(self):
     # Obtém o índice da linha selecionada na tabela
       row = self.tb_Produtos.currentRow()
@@ -663,7 +682,7 @@ class cadastroProdutoWindow(QMainWindow):
 class veiculoWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.w_cadastro_veiculo = cadastroVeiculoWindow()
+        self.w_cadastro_veiculos = cadastroVeiculoWindow()
 
         self.setWindowTitle("Clientes Veículos")
 
@@ -702,7 +721,111 @@ class veiculoWindow(QMainWindow):
 
 
         self.setCentralWidget(container)
-        self.setFixedSize(QSize(950,800))
+        self.setFixedSize(QSize(500,800))
+
+    def buscar_veiculos(self):
+        result = self.db.select_all_veiculos()
+        self.tb_veiculos.clearContents()
+        self.tb_veiculos.setRowCount(len(result))
+
+        for row, text in enumerate(result):
+            for column, data in enumerate(text):
+                self.tb_veiculos.setItem(row, column, QTableWidgetItem(str(data)))
+
+    def show_cadastro_veiculos(self):
+        if  self.w_cadastro_veiculos.isVisible():
+            self.w_cadastro_veiculos.hide()
+        else:
+            self.w_cadastro_veiculos.show()
+
+    def deletar_veiculos(self):
+        if not self.tb_veiculos.selectedIndexes():
+          QMessageBox.warning(self, "Erro", "Nenhum registro selecionado!")
+          return
+
+        msg = QMessageBox()
+        msg.setWindowTitle('Excluir')
+        msg.setText('Este registro será excluído.')
+        msg.setInformativeText('Você tem certeza que deseja continuar?')
+        msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+        resp = msg.exec()
+
+        if resp == QMessageBox.Yes:
+            cod = self.tb_veiculos.selectionModel().currentIndex().siblingAtColumn(0).data()
+            print(cod)
+            result = self.db.delete_veiculos(cod)
+            self.buscar_veiculos()
+
+            self.msg(result[0], result[1])            
+
+    def alterar_veiculos(self):
+    # Obtém o índice da linha selecionada na tabela
+      row = self.tb_veiculos.currentRow()
+
+      if row == -1:
+        QMessageBox.warning(self, 'Erro', 'Por favor, selecione um produto para alterar.')
+        return
+
+      # Obtém os dados da linha selecionada
+      placa = self.tb_veiculos.item(row, 0).text()
+      cpf = self.tb_veiculos.item(row, 1).text()
+      marca = self.tb_veiculos.item(row, 2).text()
+      modelo = self.tb_veiculos.item(row, 3).text()
+      cor = self.tb_veiculos.item(row, 4).text()
+      ano = self.tb_veiculos.item(row, 5).text()
+
+      # Cria a janela de diálogo para alterar os dados
+      dialog = QDialog(self)
+      dialog.setWindowTitle('Alterar veículos')
+      dialog.setModal(True)
+
+
+      # Adiciona os campos de texto para o usuário preencher os dados
+      layout = QFormLayout(dialog)
+      txt_placa = QLineEdit(str(placa))
+      txt_cpf = QLineEdit(cpf)
+      txt_marca = QLineEdit(marca)
+      txt_modelo = QLineEdit(modelo)
+      txt_cor = QLineEdit(cor)
+      txt_ano = QLineEdit(ano)
+
+      layout.addRow('Placa:', txt_placa)
+      layout.addRow('CPF:', txt_cpf)
+      layout.addRow('CPF:', txt_marca)
+      layout.addRow('Modelo:', txt_modelo)
+      layout.addRow('Cor:', txt_cor)
+      layout.addRow('Ano:', txt_ano)
+
+      # Adiciona os botões OK e Cancelar
+      btn_ok = QPushButton('OK')
+      btn_cancel = QPushButton('Cancelar')
+      btn_ok.clicked.connect(dialog.accept)
+      btn_cancel.clicked.connect(dialog.reject)
+      btn_layout = QHBoxLayout()
+      btn_layout.addWidget(btn_ok)
+      btn_layout.addWidget(btn_cancel)
+      layout.addRow(btn_layout)
+
+ # Exibe a janela de diálogo e verifica se o usuário clicou em OK
+      if dialog.exec() == QDialog.Accepted:
+        # Obtém os dados preenchidos pelo usuário
+        placa = txt_placa.text()
+        cpf = txt_cpf.text()
+        marca = txt_marca.text()
+        modelo = txt_modelo.text()
+        cor = txt_cor.text()
+        ano = txt_ano.text()
+        
+        
+        # Chama a função update_veiculos() com os dados do cliente
+        result = self.db.update_veiculos(placa, cpf, marca, modelo, cor, ano)
+        # Verifica se a atualização foi bem sucedida
+        print(result[0])
+        if result[0] == 'OK':                      
+            QMessageBox.information(self, 'Sucesso', 'Dados atualizados com sucesso.')
+        else:
+            QMessageBox.warning(self, 'Erro', result[1])
+        print(result[1])
 
 class cadastroVeiculoWindow(QMainWindow):
     def __init__(self):
@@ -760,7 +883,7 @@ class cadastroVeiculoWindow(QMainWindow):
 
 
         self.setCentralWidget(container)
-        self.setFixedSize(QSize(800,800))
+        self.setFixedSize(QSize(400,800))
 
     def cadastrar_veiculos_bd(self):
         
@@ -780,7 +903,6 @@ class cadastroVeiculoWindow(QMainWindow):
         self.txt_cor.setText('')
         self.txt_ano.setText('')
         
-
     def msg(self, tipo, mensage):
         msgbox = QMessageBox()
         if tipo.lower() == 'ok':
@@ -798,6 +920,7 @@ app.setStyle('Fusion')
 db = Data_base()
 db.create_table_clientes()
 db.create_table_produtos()
+db.create_table_veiculos()
 w = MainWindow()
 w.show()
 app.exec()
