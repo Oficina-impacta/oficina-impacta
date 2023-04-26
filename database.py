@@ -58,6 +58,25 @@ class Data_base:
                             """)
         self.close_connection()
 
+    def create_table_veiculos(self):
+        self.connect()
+        cursor = self.connection.cursor()
+        cursor.execute("""
+
+                        CREATE TABLE IF NOT EXISTS Veiculos(
+       placa TEXT,                     
+       cpf TEXT,
+       marca TEXT,
+       modelo TEXT,
+       cor TEXT,
+       Ano TEXT,
+
+       PRIMARY KEY (cpf)
+       );
+
+                            """)
+        self.close_connection()
+
     
     #Função registrar no banco de dados
     def registro_clientes(self, fullDataSet):      
@@ -115,7 +134,31 @@ class Data_base:
         finally:
             self.close_connection()
 
-    #Função selecionar
+    # Função para registrar os dados da tela de cadastro_veiculos
+    def registro_veiculos(self, fullDataSet):
+
+        self.connect()
+        campos_tabela = ('placa', 'cpf', 'marca', 'modelo','cor','ano')
+        qntd = ("?,?,?,?,?,?")
+        cursor = self.connection.cursor()
+        if fullDataSet[0] == '':
+            return 'erro', 'O campo Placa é obrigatório.'
+        #REGISTRAR OS DADOS
+        try:
+            cursor.execute(f"""INSERT INTO Veiculos {campos_tabela}
+
+                    VALUES ({qntd})""", fullDataSet)
+            self.connection.commit()
+            return "OK", "Veiculo cadastrado com sucesso"
+        except Exception as e:
+            print(e)
+            return 'erro', str(e)
+
+        finally:
+            self.close_connection()
+        
+
+    #Função selecionar Clientes
     def select_all_clientes(self):
         try:
             self.connect()
@@ -127,7 +170,8 @@ class Data_base:
             print(e)
         finally:
             self.close_connection()
-    
+
+    #Função selecionar Produtos
     def select_all_produtos(self):
         try:
             self.connect()
@@ -139,6 +183,20 @@ class Data_base:
             print(e)
         finally:
             self.close_connection()
+
+#Função selecionar Veiculos
+    def select_all_Veiculos(self):
+        try:
+            self.connect()
+            cursor = self.connection.cursor()
+            cursor.execute("SELECT * FROM Veiculos ORDER BY COD")
+            veiculos = cursor.fetchall()
+            return veiculos
+        except Exception as e:
+            print(e)
+        finally:
+            self.close_connection()
+
 
     #Função deletar clientes
     def delete_clientes(self, cpf):
@@ -167,6 +225,21 @@ class Data_base:
             return 'erro', str(e)
         finally:
             self.close_connection()
+
+    #Função deletar veiculos
+    def delete_veiculos(self, placa):
+
+        try:
+            self.connect()
+            cursor = self.connection.cursor()
+            cursor.execute(f"DELETE  FROM Veiculos WHERE COD = '{placa}'")
+            self.connection.commit()
+            return 'OK', 'Veiculo deletado com sucesso!' 
+        except Exception as e:
+            return 'erro', str(e)
+        finally:
+            self.close_connection()
+
 
     
     #Função para atualizar dados dos registro da tabela clientes
@@ -206,6 +279,27 @@ class Data_base:
             PRECO = (PRECO)            
             cursor.execute("""UPDATE Produtos SET COD = ?, NOME = ?, TIPO = ?, PRECO = ?""",
                (COD, NOME, TIPO, PRECO))
+            self.connection.commit()
+            return 'OK', 'Dados atualizados com sucesso!'
+        except Exception as e:
+            return 'erro', str(e)
+        finally:
+            self.close_connection()
+
+      #Função para atualizar dados dos registro da tabela veiculos
+    def update_produtos(self, placa, cpf, marca, modelo, cor, ano):
+        self.connect()
+
+        try:
+            cursor = self.connection.cursor()
+            placa = (placa)            
+            cpf = (cpf)
+            marca = (marca)
+            modelo = (modelo)            
+            cor = (cor)
+            ano = (ano)
+            cursor.execute("""UPDATE Veiculos SET placa = ?, cpf = ?, marca = ?, modelo = ?, cor = ?, ano = ?""",
+               (placa, cpf, marca, modelo, cor, ano))
             self.connection.commit()
             return 'OK', 'Dados atualizados com sucesso!'
         except Exception as e:
