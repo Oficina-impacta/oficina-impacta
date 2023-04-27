@@ -1,5 +1,8 @@
 import sqlite3
 import re
+from PySide6.QtWidgets import QMessageBox
+
+
 # #Criando o Banco de Dados:
 
 # FUNÇÃO CRIANDO BANCO DE DADOS
@@ -17,11 +20,13 @@ class Data_base:
         except Exception as e:
             print(e)
     
+    
     #função criando tabelas
     def create_table_clientes(self):
         self.connect()
         cursor = self.connection.cursor()
         cursor.execute("""
+        
 
                         CREATE TABLE IF NOT EXISTS Clientes(
 
@@ -64,14 +69,14 @@ class Data_base:
         cursor.execute("""
 
                         CREATE TABLE IF NOT EXISTS Veiculos(
-       PLACA TEXT,                     
+       PLACA TEXT NOT NULL,                     
        CPF TEXT,
        MARCA TEXT,
        MODELO TEXT,
        COR TEXT,
        ANO TEXT,
 
-       PRIMARY KEY (cpf)
+       PRIMARY KEY (placa)
        );
 
                             """)
@@ -119,6 +124,13 @@ class Data_base:
         cursor = self.connection.cursor()
         if fullDataSet[0] == '':
             return 'erro', 'O campo COD é obrigatório.'
+
+        # Verifica se o código já foi cadastrado
+        cursor.execute("SELECT * FROM Produtos WHERE COD = ?", (fullDataSet[0],))
+        resultado = cursor.fetchone()
+        if resultado is not None:
+            return 'erro', 'Já existe esse código cadastrado.'
+          
         #REGISTRAR OS DADOS
         try:
             cursor.execute(f"""INSERT INTO Produtos {campos_tabela}
@@ -133,21 +145,31 @@ class Data_base:
         finally:
             self.close_connection()
 
-    # Função para registrar os dados da tela de cadastro_veiculos
+    # Função para registar os dados da tela de cadastro_veiculos    
     def registro_veiculos(self, fullDataSet):
 
         self.connect()
         campos_tabela = ('placa', 'cpf', 'marca', 'modelo','cor','ano')
         qntd = ("?,?,?,?,?,?")
         cursor = self.connection.cursor()
+        
+        #Verificar se o campo placa foi preenchido
         if fullDataSet[0] == '':
+            print(fullDataSet)
             return 'erro', 'O campo Placa é obrigatório.'
+
+        # Verifica se a placa já foi cadastrada
+        cursor.execute("SELECT * FROM Veiculos WHERE placa = ?", (fullDataSet[0],))
+        resultado = cursor.fetchone()
+        if resultado is not None:
+            return 'erro', 'Já existe um veículo cadastrado com esta placa.'
+          
         #REGISTRAR OS DADOS
         try:
             cursor.execute(f"""INSERT INTO Veiculos {campos_tabela}
-
                     VALUES ({qntd})""", fullDataSet)
             self.connection.commit()
+
             return "OK", "Veiculo cadastrado com sucesso"
         except Exception as e:
             print(e)

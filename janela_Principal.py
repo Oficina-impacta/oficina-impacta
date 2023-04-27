@@ -8,6 +8,8 @@ from database import Data_base
 import pycep_correios
 
 
+
+
 class LoginWindow(QDialog):
     def __init__(self):
         super().__init__()
@@ -32,6 +34,9 @@ class LoginWindow(QDialog):
         # conectar o botão de login à verificação de login
         self.login_button.clicked.connect(self.check_login)
 
+        # variável para controlar o número de tentativas
+        self.num_tentativas = 0
+
     def check_login(self):
         # verifique se o nome de usuário e a senha estão corretos
         username = self.username_input.text()
@@ -40,8 +45,12 @@ class LoginWindow(QDialog):
             # fecha a tela de login e abre a janela principal
             self.done(QDialog.Accepted)
         else:
-            QMessageBox.warning(self, "Login incorreto", "Nome de usuário ou senha incorretos. Tente novamente.")
-            self.reject()
+            self.num_tentativas += 1
+            if self.num_tentativas >= 3:
+                self.reject()
+            else:
+                QMessageBox.warning(self, "Login incorreto", "Nome de usuário ou senha incorretos. Tente novamente.")
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -684,7 +693,7 @@ class veiculoWindow(QMainWindow):
         super().__init__()
         self.w_cadastro_veiculos = cadastroVeiculoWindow()
 
-        self.setWindowTitle("Clientes Veículos")
+        self.setWindowTitle("Cadastro Veículos")
 
         toolbar = QToolBar('toolbar')
         self.addToolBar(toolbar)
@@ -696,8 +705,9 @@ class veiculoWindow(QMainWindow):
         self.bt_alt_dados = QAction('Alterar Dados')
         self.bt_del_dados = QAction('Deletar cadastro')
 
+        #Definição da quantidade de campos que devem aparecer na interface grafica
         self.tb_veiculos = QTableWidget()
-        self.tb_veiculos.setColumnCount(5)
+        self.tb_veiculos.setColumnCount(6)
         self.tb_veiculos.setHorizontalHeaderLabels(['Placa', 'Cpf', 'Marca', 'Modelo', 'Cor', 'Ano'])
 
         self.db = Data_base()
@@ -721,8 +731,28 @@ class veiculoWindow(QMainWindow):
 
 
         self.setCentralWidget(container)
-        self.setFixedSize(QSize(500,800))
+        self.setFixedSize(QSize(600,800))
 
+    def msg(self, tipo, mensage):
+        msgbox = QMessageBox()
+        if tipo.lower() == 'ok':
+            msgbox.setIcon(QMessageBox.Information)
+        elif tipo.lower() == 'ERRO':
+            msgbox.setIcon(QMessageBox.Critical)
+        elif tipo.lower() == 'aviso':
+            msgbox.setIcon(QMessageBox.Warning)
+        
+        msgbox.setText(mensage)
+        msgbox.exec()
+
+
+    def show_cadastro_veiculos(self):
+        if  self.w_cadastro_veiculos.isVisible():
+            self.w_cadastro_veiculos.hide()
+        else:
+            self.w_cadastro_veiculos.show()
+
+    
     def buscar_veiculos(self):
         result = self.db.select_all_veiculos()
         self.tb_veiculos.clearContents()
@@ -730,13 +760,7 @@ class veiculoWindow(QMainWindow):
 
         for row, text in enumerate(result):
             for column, data in enumerate(text):
-                self.tb_veiculos.setItem(row, column, QTableWidgetItem(str(data)))
-
-    def show_cadastro_veiculos(self):
-        if  self.w_cadastro_veiculos.isVisible():
-            self.w_cadastro_veiculos.hide()
-        else:
-            self.w_cadastro_veiculos.show()
+                self.tb_veiculos.setItem(row, column, QTableWidgetItem(str(data)))   
 
     def deletar_veiculos(self):
         if not self.tb_veiculos.selectedIndexes():
@@ -751,15 +775,14 @@ class veiculoWindow(QMainWindow):
         resp = msg.exec()
 
         if resp == QMessageBox.Yes:
-            cod = self.tb_veiculos.selectionModel().currentIndex().siblingAtColumn(0).data()
-            print(cod)
-            result = self.db.delete_veiculos(cod)
-            self.buscar_veiculos()
-
-            self.msg(result[0], result[1])            
+          placa = self.tb_veiculos.selectionModel().currentIndex().siblingAtColumn(0).data()   
+          print(placa)       
+          result = self.db.delete_veiculos(placa)
+          self.buscar_veiculos()          
+          self.msg(result[0], result[1])            
 
     def alterar_veiculos(self):
-    # Obtém o índice da linha selecionada na tabela
+      # Obtém o índice da linha selecionada na tabela
       row = self.tb_veiculos.currentRow()
 
       if row == -1:
@@ -767,31 +790,31 @@ class veiculoWindow(QMainWindow):
         return
 
       # Obtém os dados da linha selecionada
-      placa = self.tb_veiculos.item(row, 0).text()
+      placa = self.tb_veiculos.item(row, 0).text()      
       cpf = self.tb_veiculos.item(row, 1).text()
       marca = self.tb_veiculos.item(row, 2).text()
       modelo = self.tb_veiculos.item(row, 3).text()
       cor = self.tb_veiculos.item(row, 4).text()
-      ano = self.tb_veiculos.item(row, 5).text()
+      ano_item = self.tb_veiculos.item(row, 5)
+      ano = ano_item.text() if ano_item is not None else ''
 
       # Cria a janela de diálogo para alterar os dados
       dialog = QDialog(self)
       dialog.setWindowTitle('Alterar veículos')
       dialog.setModal(True)
 
-
       # Adiciona os campos de texto para o usuário preencher os dados
       layout = QFormLayout(dialog)
-      txt_placa = QLineEdit(str(placa))
-      txt_cpf = QLineEdit(cpf)
+      txt_placa = QLineEdit(str(placa))      
+      txt_placa.setInputMask('AAA-9999')
+      txt_cpf = QLineEdit(cpf)      
       txt_marca = QLineEdit(marca)
       txt_modelo = QLineEdit(modelo)
       txt_cor = QLineEdit(cor)
       txt_ano = QLineEdit(ano)
-
       layout.addRow('Placa:', txt_placa)
       layout.addRow('CPF:', txt_cpf)
-      layout.addRow('CPF:', txt_marca)
+      layout.addRow('Marca:', txt_marca)
       layout.addRow('Modelo:', txt_modelo)
       layout.addRow('Cor:', txt_cor)
       layout.addRow('Ano:', txt_ano)
@@ -806,26 +829,25 @@ class veiculoWindow(QMainWindow):
       btn_layout.addWidget(btn_cancel)
       layout.addRow(btn_layout)
 
- # Exibe a janela de diálogo e verifica se o usuário clicou em OK
+    # Exibe a janela de diálogo e verifica se o usuário clicou em OK
       if dialog.exec() == QDialog.Accepted:
-        # Obtém os dados preenchidos pelo usuário
-        placa = txt_placa.text()
-        cpf = txt_cpf.text()
-        marca = txt_marca.text()
-        modelo = txt_modelo.text()
-        cor = txt_cor.text()
-        ano = txt_ano.text()
+          # Obtém os dados preenchidos pelo usuário
+          placa = txt_placa.text()
+          cpf = txt_cpf.text()
+          marca = txt_marca.text()
+          modelo = txt_modelo.text()
+          cor = txt_cor.text()
+          ano = txt_ano.text()     
         
-        
-        # Chama a função update_veiculos() com os dados do cliente
-        result = self.db.update_veiculos(placa, cpf, marca, modelo, cor, ano)
-        # Verifica se a atualização foi bem sucedida
-        print(result[0])
-        if result[0] == 'OK':                      
+          # Chama a função update_veiculos() com os dados do cliente
+          result = self.db.update_veiculos(placa, cpf, marca, modelo, cor, ano)
+          # Verifica se a atualização foi bem sucedida
+          print(result[0])
+          if result[0] == 'OK':                      
             QMessageBox.information(self, 'Sucesso', 'Dados atualizados com sucesso.')
-        else:
+          else:
             QMessageBox.warning(self, 'Erro', result[1])
-        print(result[1])
+            print(result[1])
 
 class cadastroVeiculoWindow(QMainWindow):
     def __init__(self):
@@ -847,6 +869,7 @@ class cadastroVeiculoWindow(QMainWindow):
 
         self.lbl_placa = QLabel('Placa: ')
         self.txt_placa = QLineEdit()
+        self.txt_placa.setInputMask("AAA-9999;_")
 
         self.lbl_cpf = QLabel('CPF: ')
         self.txt_cpf = QLineEdit()
@@ -881,28 +904,35 @@ class cadastroVeiculoWindow(QMainWindow):
         container = QWidget()
         container.setLayout(layout)
 
-
         self.setCentralWidget(container)
-        self.setFixedSize(QSize(400,800))
+        self.setFixedSize(QSize(500, 800))
 
-    def cadastrar_veiculos_bd(self):
-        
+    
+    #Função para cadastrar os veiculos
+    def cadastrar_veiculos_bd(self):        
+                          
+    # continuar com o cadastro        
         fullDataSet = (
-            self.txt_placa.text(), self.txt_cpf.text(), self.txt_marca.text(), self.txt_modelo.text(), self.txt_cor.text(),
-            self.txt_ano.text(),
-        )
+            self.txt_placa.text(), self.txt_cpf.text(), self.txt_marca.text(), self.txt_modelo.text(), self.txt_cor.text(), self.txt_ano.text())
+        
+        if any(x.strip() == '' for x in fullDataSet):
+          self.msg('erro', 'Preencha todos os campos')
+          return
+
         # cadastrar no banco
         resp = self.db.registro_veiculos(fullDataSet)
-        # exibir mensagem de sucesso ou erro
+
+        # exibir mensagem de sucesso ou erro        
         self.msg(resp[0], resp[1])
-         # Limpar campos de entrada de dados
+
+        # Limpar campos de entrada de dados
         self.txt_placa.setText('')
         self.txt_cpf.setText('')
         self.txt_marca.setText('')
         self.txt_modelo.setText('')
         self.txt_cor.setText('')
         self.txt_ano.setText('')
-        
+
     def msg(self, tipo, mensage):
         msgbox = QMessageBox()
         if tipo.lower() == 'ok':
@@ -913,7 +943,9 @@ class cadastroVeiculoWindow(QMainWindow):
             msgbox.setIcon(QMessageBox.Warning)
         
         msgbox.setText(mensage)
-        msgbox.exec()
+        msgbox.exec()    
+        
+  
  
 app = QApplication(sys.argv)
 app.setStyle('Fusion')
