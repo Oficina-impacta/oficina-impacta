@@ -664,6 +664,10 @@ class cadastroProdutoWindow(QMainWindow):
     def cadastrar_produto_bd(self):
     
         fullDataSet = (self.txt_cod.text(), self.txt_nome_produto.text(), self.txt_tipo.text(), self.txt_preco.text())
+
+        if any(x.strip() == '' for x in fullDataSet):
+          self.msg('erro', 'Preencha todos os campos')
+          return
     
         # cadastrar no banco
         resp = self.db.registro_produtos(fullDataSet)
