@@ -122,14 +122,22 @@ class Data_base:
         campos_tabela = ('COD', 'NOME', 'TIPO', 'PRECO')
         qntd = ("?,?,?,?")
         cursor = self.connection.cursor()
-        if fullDataSet[0] == '':
-            return 'erro', 'O campo COD é obrigatório.'
+
+        ############################################################################
+        # Esse IF não está sendo mais utilizado, pois foi implementado uma lógica
+        # na feature Janela_principal
+        # if fullDataSet[0] == '':
+        #     return 'erro', 'O campo COD é obrigatório.'
+        ############################################################################
 
         # Verifica se o código já foi cadastrado
         cursor.execute("SELECT * FROM Produtos WHERE COD = ?", (fullDataSet[0],))
         resultado = cursor.fetchone()
         if resultado is not None:
             return 'erro', 'Já existe esse código cadastrado.'
+        
+        if not fullDataSet[0].isnumeric():
+            return 'erro', 'O código deve conter apenas caracteres numéricos.'
           
         #REGISTRAR OS DADOS
         try:
