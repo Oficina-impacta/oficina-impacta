@@ -1,11 +1,21 @@
-import sys
+import sys 
+from PySide6.QtWidgets import (QVBoxLayout, QLabel, QLineEdit, QPushButton, QFormLayout,
+                             QWidget, QMainWindow, QMessageBox)
 from PySide6.QtGui import QAction, QPixmap
 from PySide6.QtCore import QSize, Qt
 from PySide6 import QtCore
 from PySide6.QtWidgets import *
-from database import Data_base
+from database import Data_base 
 # import pandas as pd
 import pycep_correios
+
+
+
+
+
+
+
+
 
 
 
@@ -72,6 +82,7 @@ class MainWindow(QMainWindow):
         self.w_cadastro_produto = cadastroProdutoWindow()
         self.w_veiculo = veiculoWindow()
         self.w_cadastro_veiculo = cadastroVeiculoWindow()
+        # self.w_servicos_em_aberto = ServicosEmAbertoWindow()
         
         self.setWindowTitle("Oficina Impacta")
         self.lbl = QLabel()
@@ -98,15 +109,22 @@ class MainWindow(QMainWindow):
         self.button_cadastrar_veiculos = QAction('Cadastrar Veículos')
         self.button_cadastrar_veiculos.setStatusTip('Cadastro de Veículos')
         self.button_servico_aberto = QAction('Serviços em Aberto')
-        self.button_servico_aberto.setStatusTip('Serviços em Aberto')
+        #possivelmente será removido
+        # self.button_servico_aberto.setStatusTip('Serviços em Aberto')
         self.button_historico_vendas = QAction('Historico de Vendas')
         self.button_historico_vendas.setStatusTip('Historico de Vendas')
+        self.button_servico_aberto = QAction('Serviços em Aberto', self)
+        self.button_servico_aberto.setStatusTip('Serviços em Aberto')
+        
 
         toolbar.addAction(self.button_cliente)
         toolbar.addAction(self.button_produtos)
         toolbar.addAction(self.button_veiculos)
-        toolbar.addAction(self.button_servico_aberto) 
+        ##possivelmente será removido
+        # toolbar.addAction(self.button_servico_aberto) 
         toolbar.addAction(self.button_historico_vendas)
+        toolbar.addAction(self.button_servico_aberto) 
+
         
         menu = self.menuBar()
         menu_arquivo = menu.addMenu('Cadastro')
@@ -126,7 +144,11 @@ class MainWindow(QMainWindow):
 
         self.button_veiculos.triggered.connect(self.show_veiculosWindow)
         self.button_cadastrar_veiculos.triggered.connect(self.show_cadastro_veiculo)
-        
+
+        self.button_servico_aberto.triggered.connect(self.show_servicos_em_aberto)
+
+
+               
 
         layout = QVBoxLayout()
         layout.addWidget(self.lbl)
@@ -173,6 +195,10 @@ class MainWindow(QMainWindow):
         else:
             self.w_cadastro_veiculo.show()
 
+    def show_servicos_em_aberto(self):
+        self.w_servicos_em_aberto = ServicosEmAbertoWindow()
+        self.w_servicos_em_aberto.show()
+
 class clienteWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -201,6 +227,7 @@ class clienteWindow(QMainWindow):
         self.bt_att_tb_cliente.triggered.connect(self.buscar_clientes)
         self.bt_alt_dados.triggered.connect(self.alterar_clientes)
         self.bt_del_dados.triggered.connect(self.deletar_clientes)
+        
         
         toolbar.addAction(self.bt_cadastrarCliente)
         toolbar.addAction(self.bt_att_tb_cliente)
@@ -473,10 +500,10 @@ class produtoWindow(QMainWindow):
 
         self.setStatusBar(QStatusBar(self))
 
-        self.bt_cadastrarProduto = QAction('Cadastrar produto ou serviço')
+        self.bt_cadastrarProduto = QAction('Cadastrar produto/]serviço')
         self.bt_att_tb_Produto = QAction('Atualizar Tabela')
         self.bt_alt_dados = QAction('Alterar Dados')
-        self.bt_del_dados = QAction('Deletar Produto ou serviço')
+        self.bt_del_dados = QAction('Deletar Produto/serviço')
 
         self.tb_Produtos = QTableWidget()
         self.tb_Produtos.setColumnCount(4)
@@ -503,7 +530,7 @@ class produtoWindow(QMainWindow):
 
 
         self.setCentralWidget(container)
-        self.setFixedSize(QSize(950,800))
+        self.setFixedSize(QSize(430,800))
 
     def msg(self, tipo, mensage):
         msgbox = QMessageBox()
@@ -949,8 +976,124 @@ class cadastroVeiculoWindow(QMainWindow):
         msgbox.setText(mensage)
         msgbox.exec()    
         
-  
- 
+
+
+class ServicosEmAbertoWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()  
+        self.database = Data_base    
+        self.setWindowTitle("Serviços em Aberto")
+        self.setGeometry(100, 100, 800, 600)
+
+        layout = QVBoxLayout()
+        label = QLabel("")
+        layout.addWidget(label)
+
+        # cria uma instancia do objeto Database
+        self.db = Data_base()
+
+        form_layout = QFormLayout()
+
+        cpf_label = QLabel("CPF: ")                
+        self.cpf_input = QLineEdit()  
+        self.cpf_input.setMaximumWidth(150) # define a largura máxima do campo para 150 pixels      
+        form_layout.addRow(cpf_label, self.cpf_input)
+        # Define a máscara de CPF
+        cpf_mask = "000.000.000-00"
+        self.cpf_input.setInputMask(cpf_mask)
+        form_layout.addRow(cpf_label, self.cpf_input)
+        # cria um novo QLabel com o texto "Digite seu CPF:"
+        cpf_title_label = QLabel("Efetuar busca do cliente:")
+        # adiciona o novo QLabel ao layout acima do campo CPF
+        form_layout.addRow(cpf_title_label)
+        form_layout.addRow(cpf_label, self.cpf_input)
+    
+        
+        # botão buscar
+        botao_buscar = QPushButton('Buscar', self)
+        botao_buscar.clicked.connect(self.buscar_veiculos) # conecta o botão a função buscar_veiculos
+        botao_buscar.setFixedSize(100, 30)  # define as dimensões para 100 pixels de largura por 30 pixels de altura
+        form_layout.addRow(botao_buscar)
+
+        layout.addLayout(form_layout)
+
+        # tabela de veículos
+        self.table_widget = QTableWidget()
+        self.table_widget.setColumnCount(8)
+        self.table_widget.setHorizontalHeaderLabels(['CPF', 'Nome', 'Telefone', 'Placa', 'Modelo', 'Marca', 'Cor', 'Ano'])
+        layout.addWidget(self.table_widget)
+
+        # botão Produtos e Serviços 
+        botao_gerar_pedido = QPushButton('Produtos/Serviços', self)
+        layout.addWidget(botao_gerar_pedido)
+        botao_gerar_pedido.setFixedWidth(120)
+        
+        botao_gerar_pedido.clicked.connect(self.buscar_produtos)        
+
+        # Cria um novo widget para a barra de rolagem
+        scroll_widget = QWidget()
+        # Define o layout para a barra de rolagem
+        scroll_layout = QVBoxLayout(scroll_widget)
+        # Define a barra de rolagem como filho do widget principal
+        layout.addWidget(scroll_widget)
+
+        widget = QWidget()
+        widget.setLayout(layout)
+        self.setCentralWidget(widget)
+
+       # criação da segunda tabela
+        self.table_widget2 = QTableWidget()
+        self.table_widget2.setColumnCount(4)
+        self.table_widget2.setHorizontalHeaderLabels(['Cod', 'Nome', 'Tipo', 'Valor'])
+        self.table_widget2.setColumnWidth(0, 45) # definindo a largura da primeira coluna (COD) para 50 pixels
+        scroll_layout.addWidget(self.table_widget2)
+        self.table_widget2.setMaximumWidth(360)
+
+        
+    def buscar_produtos(self):
+      db = Data_base()
+      result = db.select_all_produtos()
+      self.table_widget2.clearContents()
+      self.table_widget2.setRowCount(len(result))
+      for i, produto in enumerate(result):
+          for j, item in enumerate(produto):
+              self.table_widget2.setItem(i, j, QTableWidgetItem(str(item)))
+
+
+    def buscar_veiculos(self):
+        cpf = self.cpf_input.text()
+
+        if not cpf:  # verifica se o campo CPF está vazio
+            QMessageBox.warning(self, "Atenção", "Digite um CPF válido.")
+            return
+
+        db = Data_base()
+        veiculos = db.buscar_veiculos_por_cpf(cpf)
+        self.table_widget.setRowCount(len(veiculos))
+
+        for row, veiculo in enumerate(veiculos):
+            cpf = QTableWidgetItem(veiculo['cpf'])
+            nome = QTableWidgetItem(veiculo['nome'])
+            telefone = QTableWidgetItem(veiculo['telefone'])
+            placa = QTableWidgetItem(veiculo['placa'])
+            modelo = QTableWidgetItem(veiculo['modelo'])
+            marca = QTableWidgetItem(veiculo['marca'])
+            cor = QTableWidgetItem(veiculo['cor'])
+            ano = QTableWidgetItem(veiculo['ano'])
+            
+    
+            self.table_widget.setItem(row, 0, cpf)
+            self.table_widget.setItem(row, 1, nome)
+            self.table_widget.setItem(row, 2, telefone)
+            self.table_widget.setItem(row, 3, placa)
+            self.table_widget.setItem(row, 4, modelo)
+            self.table_widget.setItem(row, 5, marca)
+            self.table_widget.setItem(row, 6, cor)
+            self.table_widget.setItem(row, 7, ano)
+
+
+    
+   
 app = QApplication(sys.argv)
 app.setStyle('Fusion')
 db = Data_base()

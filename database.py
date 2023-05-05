@@ -13,12 +13,14 @@ class Data_base:
 
     def connect(self):
         self.connection = sqlite3.connect(self.name)
+        return self.connection
 
     def close_connection(self):
         try:
             self.connection.close()
         except Exception as e:
             print(e)
+
     
     
     #função criando tabelas
@@ -225,109 +227,124 @@ class Data_base:
         finally:
             self.close_connection()
 
+  #Função para efetuar a busca de veiculos e clientes
+    def buscar_veiculos_por_cpf(self, cpf):
+      cursor = self.connect().cursor()
+      cursor.execute(f"SELECT clientes.cpf, clientes.nome, clientes.telefone, veiculos.placa, veiculos.modelo, veiculos.marca, veiculos.cor, veiculos.ano FROM clientes INNER JOIN veiculos ON clientes.cpf = veiculos.cpf WHERE clientes.cpf = '{cpf}'")
+      results = cursor.fetchall()
+      veiculos = []
+      for row in results:
+        veiculo = {'cpf': row[0], 'nome': row[1], 'telefone': row[2], 'placa': row[3], 'modelo': row[4], 'marca': row[5], 'cor': row[6], 'ano': row[7]}
+        veiculos.append(veiculo)
+      self.close_connection()
+      return veiculos
+
+
+            
+
     #Função deletar clientes
     def delete_clientes(self, cpf):
 
-        try:
-            self.connect()
-            cursor = self.connection.cursor()
-            cursor.execute(f"DELETE  FROM Clientes WHERE CPF = '{cpf}'")
-            self.connection.commit()
-            return 'OK', 'Cliente deletado com sucesso!' 
-        except Exception as e:
-            return 'erro', str(e)
-        finally:
-            self.close_connection()
+          try:
+              self.connect()
+              cursor = self.connection.cursor()
+              cursor.execute(f"DELETE  FROM Clientes WHERE CPF = '{cpf}'")
+              self.connection.commit()
+              return 'OK', 'Cliente deletado com sucesso!' 
+          except Exception as e:
+              return 'erro', str(e)
+          finally:
+              self.close_connection()
 
-    #Função deletar produtos
+      #Função deletar produtos
     def delete_produtos(self, cod):
 
-        try:
-            self.connect()
-            cursor = self.connection.cursor()
-            cursor.execute(f"DELETE  FROM Produtos WHERE COD = '{cod}'")
-            self.connection.commit()
-            return 'OK', 'Produto ou serviço deletado com sucesso!' 
-        except Exception as e:
-            return 'erro', str(e)
-        finally:
-            self.close_connection()
+          try:
+              self.connect()
+              cursor = self.connection.cursor()
+              cursor.execute(f"DELETE  FROM Produtos WHERE COD = '{cod}'")
+              self.connection.commit()
+              return 'OK', 'Produto ou serviço deletado com sucesso!' 
+          except Exception as e:
+              return 'erro', str(e)
+          finally:
+              self.close_connection()
 
-    #Função deletar veiculos
+      #Função deletar veiculos
     def delete_veiculos(self, placa):
 
-        try:
-            self.connect()
-            cursor = self.connection.cursor()
-            cursor.execute(f"DELETE  FROM Veiculos WHERE PLACA = '{placa}'")
-            self.connection.commit()
-            return 'OK', 'Veiculo deletado com sucesso!' 
-        except Exception as e:
-            return 'erro', str(e)
-        finally:
-            self.close_connection()
+          try:
+              self.connect()
+              cursor = self.connection.cursor()
+              cursor.execute(f"DELETE  FROM Veiculos WHERE PLACA = '{placa}'")
+              self.connection.commit()
+              return 'OK', 'Veiculo deletado com sucesso!' 
+          except Exception as e:
+              return 'erro', str(e)
+          finally:
+              self.close_connection()
 
-    #Função para atualizar dados dos registro da tabela clientes
+      #Função para atualizar dados dos registro da tabela clientes
     def update_clientes(self, nome, telefone, cep, logradouro, numero, complemento, bairro, cidade, cpf):
-        self.connect()
+          self.connect()
 
-        try:
-            cursor = self.connection.cursor()
-            nome = (nome)
-            telefone = (telefone)
-            cep = (cep)
-            logradouro = (logradouro)
-            numero = (numero)
-            complemento = (complemento)
-            bairro = (bairro)
-            cidade = (cidade)
-            cursor.execute("""UPDATE CLIENTES SET NOME = ?, TELEFONE = ?, CEP = ?, LOGRADOURO = ?, NUMERO = ?, 
-                  COMPLEMENTO = ?, BAIRRO = ?, CIDADE = ? WHERE CPF = ?""",
-               (nome, telefone, cep, logradouro, numero, complemento, bairro, cidade, cpf))
-            self.connection.commit()
-            return 'OK', 'Dados atualizados com sucesso!'            
-        except Exception as e:
-            return 'erro', str(e)
-        finally:
-            self.close_connection()
- 
-    #Função para atualizar dados dos registro da tabela produtos
+          try:
+              cursor = self.connection.cursor()
+              nome = (nome)
+              telefone = (telefone)
+              cep = (cep)
+              logradouro = (logradouro)
+              numero = (numero)
+              complemento = (complemento)
+              bairro = (bairro)
+              cidade = (cidade)
+              cursor.execute("""UPDATE CLIENTES SET NOME = ?, TELEFONE = ?, CEP = ?, LOGRADOURO = ?, NUMERO = ?, 
+                    COMPLEMENTO = ?, BAIRRO = ?, CIDADE = ? WHERE CPF = ?""",
+                 (nome, telefone, cep, logradouro, numero, complemento, bairro, cidade, cpf))
+              self.connection.commit()
+              return 'OK', 'Dados atualizados com sucesso!'            
+          except Exception as e:
+              return 'erro', str(e)
+          finally:
+              self.close_connection()
+  
+      #Função para atualizar dados dos registro da tabela produtos
     def update_produtos(self, COD, NOME, TIPO, PRECO):
-        self.connect()
+          self.connect()
 
-        try:
-            cursor = self.connection.cursor()
-            COD = (COD)            
-            NOME = (NOME)
-            TIPO = (TIPO)
-            PRECO = (PRECO)            
-            cursor.execute("""UPDATE Produtos SET COD = ?, NOME = ?, TIPO = ?, PRECO = ?""",
-               (COD, NOME, TIPO, PRECO))
-            self.connection.commit()
-            return 'OK', 'Dados atualizados com sucesso!'
-        except Exception as e:
-            return 'erro', str(e)
-        finally:
-            self.close_connection()
+          try:
+              cursor = self.connection.cursor()
+              COD = (COD)            
+              NOME = (NOME)
+              TIPO = (TIPO)
+              PRECO = (PRECO)            
+              cursor.execute("""UPDATE Produtos SET COD = ?, NOME = ?, TIPO = ?, PRECO = ?""",
+                 (COD, NOME, TIPO, PRECO))
+              self.connection.commit()
+              return 'OK', 'Dados atualizados com sucesso!'
+          except Exception as e:
+              return 'erro', str(e)
+          finally:
+              self.close_connection()
 
-      #Função para atualizar dados dos registro da tabela veiculos
+        #Função para atualizar dados dos registro da tabela veiculos
 
     def update_veiculos(self, placa, cpf, marca, modelo, cor, ano):
-        self.connect()
+          self.connect()
 
-        try:
-            cursor = self.connection.cursor()
-            placa = (placa)            
-            cpf = (cpf)
-            marca = (marca)
-            modelo = (modelo)            
-            cor = (cor)
-            ano = (ano)
-            cursor.execute("""UPDATE Veiculos SET placa = ?, cpf = ?, marca = ?, modelo = ?, cor = ?, ano = ?""",
-               (placa, cpf, marca, modelo, cor, ano))
-            self.connection.commit()
-            return 'OK', 'Dados atualizados com sucesso!'
-        except Exception as e:
-            return 'erro', str(e)
-        finally:
-            self.close_connection()
+          try:
+              cursor = self.connection.cursor()
+              placa = (placa)            
+              cpf = (cpf)
+              marca = (marca)
+              modelo = (modelo)            
+              cor = (cor)
+              ano = (ano)
+              cursor.execute("""UPDATE Veiculos SET placa = ?, cpf = ?, marca = ?, modelo = ?, cor = ?, ano = ?""",
+                 (placa, cpf, marca, modelo, cor, ano))
+              self.connection.commit()
+              return 'OK', 'Dados atualizados com sucesso!'
+          except Exception as e:
+              return 'erro', str(e)
+          finally:
+              self.close_connection()
