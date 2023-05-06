@@ -1007,38 +1007,68 @@ class cadastroServicoWindow(QMainWindow):
         self.addToolBar(toolbar)
         self.setStatusBar(QStatusBar(self))
 
+        self.bt_buscar = QAction('Buscar cadastro')
+        self.bt_buscar.setStatusTip('Buscar cadastro de clientes')
+
+        toolbar.addAction(self.bt_buscar)
+
         self.lbl_cpf = QLabel('CPF: ')
         self.txt_cpf = QLineEdit()
 
         self.lbl_placa = QLabel('Placa: ')
         self.txt_placa = QLineEdit()
 
-        self.lbl_pagamento = QLabel('Pagamento: ')
-        self.txt_pagamento = QLineEdit()
-        
-        self.lbl_valor = QLabel('Valor: ')
-        self.txt_valor = QLineEdit()
+        self.tb_veiculos = QTableWidget()
+        self.tb_veiculos.setColumnCount(6)
+        self.tb_veiculos.setHorizontalHeaderLabels(['Placa', 'Cpf', 'Marca', 'Modelo', 'Cor', 'Ano'])
 
-        self.lbl_status = QLabel('Status: ')
-        self.txt_status = QLineEdit()
+        self.tb_produtos = QTableWidget()
+        self.tb_produtos.setColumnCount(4)
+        self.tb_produtos.setHorizontalHeaderLabels(['COD', 'NOME', 'TIPO', 'PRECO'])
+
+        self.tb_produtos_os = QTableWidget()
+        self.tb_produtos_os.setColumnCount(4)
+        self.tb_produtos_os.setHorizontalHeaderLabels(['COD', 'NOME', 'TIPO', 'PRECO'])
 
         layout = QVBoxLayout()
+        layout.addWidget(self.lbl_placa)
+        layout.addWidget(self.txt_placa)        
         layout.addWidget(self.lbl_cpf)
         layout.addWidget(self.txt_cpf)
-        layout.addWidget(self.lbl_placa)
-        layout.addWidget(self.txt_placa)
-        layout.addWidget(self.lbl_pagamento)
-        layout.addWidget(self.txt_pagamento)
-        layout.addWidget(self.lbl_valor)
-        layout.addWidget(self.txt_valor)
-        layout.addWidget(self.lbl_status)
-        layout.addWidget(self.txt_status)
-    
+        layout.addWidget(self.tb_veiculos)
+        layout.addWidget(self.tb_produtos)
+        layout.addWidget(self.tb_produtos_os)
+
+
         container = QWidget()
         container.setLayout(layout)
+
+        self.db = Data_base()
+        self.buscar_produtos()
+        self.buscar_veiculos()
     
         self.setCentralWidget(container)
-        self.setFixedSize(QSize(600,400))
+        self.setFixedSize(QSize(1000,1000))
+
+    def buscar_produtos(self):
+        result = self.db.select_all_produtos()
+        self.tb_produtos.clearContents()
+        self.tb_produtos.setRowCount(len(result))
+
+        for row, text in enumerate(result):
+            for column, data in enumerate(text):
+                self.tb_produtos.setItem(row, column, QTableWidgetItem(str(data)))
+
+    def buscar_veiculos(self):
+        result = self.db.select_all_veiculos()
+        self.tb_veiculos.clearContents()
+        self.tb_veiculos.setRowCount(len(result))
+
+        for row, text in enumerate(result):
+            for column, data in enumerate(text):
+                self.tb_veiculos.setItem(row, column, QTableWidgetItem(str(data)))
+
+
 
  
 app = QApplication(sys.argv)
