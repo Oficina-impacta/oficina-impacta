@@ -1009,6 +1009,7 @@ class cadastroServicoWindow(QMainWindow):
 
         self.bt_buscar = QAction('Buscar cadastro')
         self.bt_buscar.setStatusTip('Buscar cadastro de clientes')
+        self.bt_buscar.triggered.connect(self.buscar_placa_cliente)
 
         toolbar.addAction(self.bt_buscar)
 
@@ -1026,10 +1027,6 @@ class cadastroServicoWindow(QMainWindow):
         self.tb_produtos.setColumnCount(4)
         self.tb_produtos.setHorizontalHeaderLabels(['COD', 'NOME', 'TIPO', 'PRECO'])
 
-        self.tb_produtos_os = QTableWidget()
-        self.tb_produtos_os.setColumnCount(4)
-        self.tb_produtos_os.setHorizontalHeaderLabels(['COD', 'NOME', 'TIPO', 'PRECO'])
-
         layout = QVBoxLayout()
         layout.addWidget(self.lbl_placa)
         layout.addWidget(self.txt_placa)        
@@ -1037,15 +1034,13 @@ class cadastroServicoWindow(QMainWindow):
         layout.addWidget(self.txt_cpf)
         layout.addWidget(self.tb_veiculos)
         layout.addWidget(self.tb_produtos)
-        layout.addWidget(self.tb_produtos_os)
-
 
         container = QWidget()
         container.setLayout(layout)
 
         self.db = Data_base()
         self.buscar_produtos()
-        self.buscar_veiculos()
+     
     
         self.setCentralWidget(container)
         self.setFixedSize(QSize(1000,1000))
@@ -1059,8 +1054,8 @@ class cadastroServicoWindow(QMainWindow):
             for column, data in enumerate(text):
                 self.tb_produtos.setItem(row, column, QTableWidgetItem(str(data)))
 
-    def buscar_veiculos(self):
-        result = self.db.select_all_veiculos()
+    def buscar_placa_cliente(self):
+        result = self.db.buscar_placa()
         self.tb_veiculos.clearContents()
         self.tb_veiculos.setRowCount(len(result))
 

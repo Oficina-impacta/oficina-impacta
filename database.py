@@ -353,3 +353,15 @@ class Data_base:
             return 'erro', str(e)
         finally:
             self.close_connection()
+
+    def buscar_placa(self, placa):
+        try:
+            self.connect()
+            cursor = self.connection.cursor()
+            cursor.execute("SELECT * FROM Veiculos WHERE PLACA = '{placa}'")
+            clientes = cursor.fetchall()
+            return clientes
+        except Exception as e:
+            print(e)
+        finally:
+            self.close_connection()
