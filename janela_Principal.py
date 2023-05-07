@@ -6,7 +6,8 @@ from PySide6.QtWidgets import *
 from database import Data_base
 # import pandas as pd
 import pycep_correios
-import re
+from PySide6.QtWidgets import QTableWidget, QTableWidgetItem, QCheckBox
+
 
 
 
@@ -1028,6 +1029,10 @@ class cadastroServicoWindow(QMainWindow):
         self.tb_veiculos = QTableWidget()
         self.tb_veiculos.setColumnCount(6)
         self.tb_veiculos.setHorizontalHeaderLabels(['Placa', 'Cpf', 'Marca', 'Modelo', 'Cor', 'Ano'])
+        # bloquear a edição dos campos da tabela
+        self.tb_veiculos.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        
+
 
         self.tb_produtos = QTableWidget()
         self.tb_produtos.setColumnCount(4)
@@ -1061,7 +1066,7 @@ class cadastroServicoWindow(QMainWindow):
                 self.tb_produtos.setItem(row, column, QTableWidgetItem(str(data)))
 
     
-  
+
     def buscar_placa(self):
         placa = self.txt_placa.text().upper()
         if placa:
@@ -1078,9 +1083,6 @@ class cadastroServicoWindow(QMainWindow):
                     self.tb_veiculos.setItem(0, column, QTableWidgetItem(str(data)))
                 return 'placa' # retorna 'placa' para indicar que a busca foi bem sucedida
             
-
-
-
     def buscar_cpf(self):
         cpf = self.txt_cpf.text()
         if cpf:
@@ -1094,16 +1096,21 @@ class cadastroServicoWindow(QMainWindow):
                 return 'cpf' # retorna 'cpf' para indicar que a busca foi bem sucedida
             
 
+    def buscar_registros_selecionados(self):
+        registros_selecionados = []
+        for row in range(self.tb_veiculos.rowCount()):
+            checkbox = self.tb_veiculos.item(row, 0)
+            if checkbox.checkState() == Qt.Checked:
+                placa = self.tb_veiculos.item(row, 1).text()
+                cpf = self.tb_veiculos.item(row, 2).text()
+                marca = self.tb_veiculos.item(row, 3).text()
+                modelo = self.tb_veiculos.item(row, 4).text()
+                cor = self.tb_veiculos.item(row, 5).text()
+                ano = self.tb_veiculos.item(row, 6).text()
+                registros_selecionados.append([placa, cpf, marca, modelo, cor, ano])
+        return registros_selecionados
 
-
-
-    
-
-    
-               
-
-
-
+            
  
 app = QApplication(sys.argv)
 app.setStyle('Fusion')
