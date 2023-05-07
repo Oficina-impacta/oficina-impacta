@@ -354,13 +354,27 @@ class Data_base:
         finally:
             self.close_connection()
 
-    def buscar_placa(self, placa):
+    
+    def select_veiculo_by_placa(self, placa):
+       try:
+           self.connect()
+           cursor = self.connection.cursor()
+           cursor.execute("SELECT * FROM Veiculos WHERE PLACA = ?", (placa,))
+           veiculo = cursor.fetchone()
+           return veiculo
+       except Exception as e:
+           print(e)
+       finally:
+           self.close_connection()
+
+    
+    def select_veiculos_by_cpf(self, cpf):
         try:
             self.connect()
             cursor = self.connection.cursor()
-            cursor.execute("SELECT * FROM Veiculos WHERE PLACA = '{placa}'")
-            clientes = cursor.fetchall()
-            return clientes
+            cursor.execute("SELECT * FROM Veiculos WHERE REPLACE(CPF, '.', '') = REPLACE(?, '.', '') AND REPLACE(CPF, '-', '') = REPLACE(?, '-', '')", (cpf, cpf,))
+            veiculos = cursor.fetchall()
+            return veiculos
         except Exception as e:
             print(e)
         finally:

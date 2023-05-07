@@ -6,7 +6,7 @@ from PySide6.QtWidgets import *
 from database import Data_base
 # import pandas as pd
 import pycep_correios
-
+import re
 
 
 
@@ -1009,15 +1009,21 @@ class cadastroServicoWindow(QMainWindow):
 
         self.bt_buscar = QAction('Buscar cadastro')
         self.bt_buscar.setStatusTip('Buscar cadastro de clientes')
-        self.bt_buscar.triggered.connect(self.buscar_placa_cliente)
+        self.bt_buscar.triggered.connect(self.buscar_placa)
+        self.bt_buscar.triggered.connect(self.buscar_cpf)
 
         toolbar.addAction(self.bt_buscar)
 
         self.lbl_cpf = QLabel('CPF: ')
         self.txt_cpf = QLineEdit()
+        self.txt_cpf.setInputMask("000.000.000-00;_")
+        self.txt_cpf.setFixedWidth(100)
 
         self.lbl_placa = QLabel('Placa: ')
         self.txt_placa = QLineEdit()
+        self.txt_placa.setInputMask('AAA-9999')
+        self.txt_placa.setFixedWidth(100)
+        
 
         self.tb_veiculos = QTableWidget()
         self.tb_veiculos.setColumnCount(6)
@@ -1054,14 +1060,47 @@ class cadastroServicoWindow(QMainWindow):
             for column, data in enumerate(text):
                 self.tb_produtos.setItem(row, column, QTableWidgetItem(str(data)))
 
-    def buscar_placa_cliente(self):
-        result = self.db.buscar_placa()
-        self.tb_veiculos.clearContents()
-        self.tb_veiculos.setRowCount(len(result))
+    
+  
+    def buscar_placa(self):
+        placa = self.txt_placa.text().upper()
+        if placa:
+            veiculo = self.db.select_veiculo_by_placa(placa)
+            if veiculo:
+                # preencher os campos com as informações do veículo encontrado
+                self.txt_placa.setText(veiculo[0])               
 
-        for row, text in enumerate(result):
-            for column, data in enumerate(text):
-                self.tb_veiculos.setItem(row, column, QTableWidgetItem(str(data)))
+                # buscar informações do veículo na tabela e preencher a tabela com elas
+                result = self.db.select_veiculo_by_placa(placa)
+                self.tb_veiculos.clearContents()
+                self.tb_veiculos.setRowCount(1)
+                for column, data in enumerate(result):
+                    self.tb_veiculos.setItem(0, column, QTableWidgetItem(str(data)))
+                return 'placa' # retorna 'placa' para indicar que a busca foi bem sucedida
+            
+
+
+
+    def buscar_cpf(self):
+        cpf = self.txt_cpf.text()
+        if cpf:
+            veiculos = self.db.select_veiculos_by_cpf(cpf)
+            if veiculos:
+                self.tb_veiculos.clearContents()
+                self.tb_veiculos.setRowCount(len(veiculos))
+                for row, veiculo in enumerate(veiculos):
+                    for column, data in enumerate(veiculo):
+                        self.tb_veiculos.setItem(row, column, QTableWidgetItem(str(data)))
+                return 'cpf' # retorna 'cpf' para indicar que a busca foi bem sucedida
+            
+
+
+
+
+    
+
+    
+               
 
 
 
