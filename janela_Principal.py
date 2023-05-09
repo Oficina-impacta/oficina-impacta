@@ -1024,91 +1024,92 @@ class cadastroServicoWindow(QMainWindow):
         self.txt_placa = QLineEdit()
         self.txt_placa.setInputMask('AAA-9999')
         self.txt_placa.setFixedWidth(100)
-        
 
         self.tb_veiculos = QTableWidget()
-        self.tb_veiculos.setColumnCount(6)
-        self.tb_veiculos.setHorizontalHeaderLabels(['Placa', 'Cpf', 'Marca', 'Modelo', 'Cor', 'Ano'])
+        self.tb_veiculos.setColumnCount(7)
+        self.tb_veiculos.setHorizontalHeaderLabels(['Placa', 'Cpf', 'Marca', 'Modelo', 'Cor', 'Ano','Selecionar'])
         # bloquear a edição dos campos da tabela
-        self.tb_veiculos.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        
-
-
-        self.tb_produtos = QTableWidget()
-        self.tb_produtos.setColumnCount(4)
-        self.tb_produtos.setHorizontalHeaderLabels(['COD', 'NOME', 'TIPO', 'PRECO'])
-
+        self.tb_veiculos.setEditTriggers(QAbstractItemView.NoEditTriggers)      
+     
         layout = QVBoxLayout()
         layout.addWidget(self.lbl_placa)
         layout.addWidget(self.txt_placa)        
         layout.addWidget(self.lbl_cpf)
         layout.addWidget(self.txt_cpf)
         layout.addWidget(self.tb_veiculos)
-        layout.addWidget(self.tb_produtos)
+        # layout.addWidget(self.tb_produtos)
 
         container = QWidget()
         container.setLayout(layout)
 
         self.db = Data_base()
-        self.buscar_produtos()
-     
-    
+        # self.buscar_produtos()     
+
         self.setCentralWidget(container)
-        self.setFixedSize(QSize(1000,1000))
+        self.setFixedSize(QSize(1000, 1000))
 
-    def buscar_produtos(self):
-        result = self.db.select_all_produtos()
-        self.tb_produtos.clearContents()
-        self.tb_produtos.setRowCount(len(result))
 
-        for row, text in enumerate(result):
-            for column, data in enumerate(text):
-                self.tb_produtos.setItem(row, column, QTableWidgetItem(str(data)))
+    # Função para configurar o estado inicial do checkbox
+    def set_checkbox_state(self, row, state):
+        checkbox = QCheckBox()
+        checkbox.setChecked(state)
+        checkbox.stateChanged.connect(lambda: self.update_checkbox_state(row, checkbox.isChecked()))
+        self.tb_veiculos.setCellWidget(row, 6, checkbox)
 
-    
+    # Função para atualizar o estado do checkbox
+    def update_checkbox_state(self, row, state):
+        checkbox = self.tb_veiculos.cellWidget(row, 6)
+        checkbox.setChecked(state)
+
+  
 
     def buscar_placa(self):
-        placa = self.txt_placa.text().upper()
-        if placa:
-            veiculo = self.db.select_veiculo_by_placa(placa)
-            if veiculo:
-                # preencher os campos com as informações do veículo encontrado
-                self.txt_placa.setText(veiculo[0])               
+      placa = self.txt_placa.text().upper()
+      if placa:
+          veiculo = self.db.select_veiculo_by_placa(placa)
+          if veiculo:
+              # Verificar se o veículo já está na tabela
+              for row in range(self.tb_veiculos.rowCount()):
+                  if self.tb_veiculos.item(row, 0) and self.tb_veiculos.item(row, 0).text() == placa:
+                      # Se já existe uma linha para o veículo, selecionar o checkbox correspondente
+                      checkbox = self.tb_veiculos.cellWidget(row, 6)
+                      checkbox.setChecked(True)
+                      return
+              # Se o veículo não estiver na tabela, adicionar uma nova linha com as informações do veículo e um checkbox desmarcado
+              row = self.tb_veiculos.rowCount()
+              self.tb_veiculos.insertRow(row)
+              self.tb_veiculos.setItem(row, 0, QTableWidgetItem(veiculo[0]))
+              self.tb_veiculos.setItem(row, 1, QTableWidgetItem(veiculo[1]))
+              self.tb_veiculos.setItem(row, 2, QTableWidgetItem(veiculo[2]))
+              self.tb_veiculos.setItem(row, 3, QTableWidgetItem(veiculo[3]))
+              self.tb_veiculos.setItem(row, 4, QTableWidgetItem(veiculo[4]))
+              self.tb_veiculos.setItem(row, 5, QTableWidgetItem(str(veiculo[5])))
+              self.set_checkbox_state(row, False)
 
-                # buscar informações do veículo na tabela e preencher a tabela com elas
-                result = self.db.select_veiculo_by_placa(placa)
-                self.tb_veiculos.clearContents()
-                self.tb_veiculos.setRowCount(1)
-                for column, data in enumerate(result):
-                    self.tb_veiculos.setItem(0, column, QTableWidgetItem(str(data)))
-                return 'placa' # retorna 'placa' para indicar que a busca foi bem sucedida
-            
+
+
+    
+
+
     def buscar_cpf(self):
-        cpf = self.txt_cpf.text()
-        if cpf:
-            veiculos = self.db.select_veiculos_by_cpf(cpf)
-            if veiculos:
-                self.tb_veiculos.clearContents()
-                self.tb_veiculos.setRowCount(len(veiculos))
-                for row, veiculo in enumerate(veiculos):
-                    for column, data in enumerate(veiculo):
-                        self.tb_veiculos.setItem(row, column, QTableWidgetItem(str(data)))
-                return 'cpf' # retorna 'cpf' para indicar que a busca foi bem sucedida
+      cpf = self.txt_cpf.text()
+      if cpf:
+          veiculos = self.db.select_veiculos_by_cpf(cpf)
+          if veiculos:
+              self.tb_veiculos.clearContents()
+              self.tb_veiculos.setRowCount(len(veiculos))
+              for row, veiculo in enumerate(veiculos):
+                  for column, data in enumerate(veiculo):
+                      self.tb_veiculos.setItem(row, column, QTableWidgetItem(str(data)))
+                  # adiciona o checkbox desmarcado na última coluna
+                  checkbox = QCheckBox(self.tb_veiculos)
+                  checkbox.setChecked(False)
+                  self.tb_veiculos.setCellWidget(row, 6, checkbox)
+              return 'cpf' # retorna 'cpf' para indicar que a busca foi bem sucedida
+
             
 
-    def buscar_registros_selecionados(self):
-        registros_selecionados = []
-        for row in range(self.tb_veiculos.rowCount()):
-            checkbox = self.tb_veiculos.item(row, 0)
-            if checkbox.checkState() == Qt.Checked:
-                placa = self.tb_veiculos.item(row, 1).text()
-                cpf = self.tb_veiculos.item(row, 2).text()
-                marca = self.tb_veiculos.item(row, 3).text()
-                modelo = self.tb_veiculos.item(row, 4).text()
-                cor = self.tb_veiculos.item(row, 5).text()
-                ano = self.tb_veiculos.item(row, 6).text()
-                registros_selecionados.append([placa, cpf, marca, modelo, cor, ano])
-        return registros_selecionados
+   
 
             
  
