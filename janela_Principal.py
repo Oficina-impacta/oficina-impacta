@@ -203,7 +203,8 @@ class clienteWindow(QMainWindow):
         self.tb_clientes = QTableWidget()
         self.tb_clientes.setColumnCount(9)
         self.tb_clientes.setHorizontalHeaderLabels(['Nome', 'Cpf', 'Telefone', 'CEP', 'Logradouro', 'Numero', 'Complemento', 'Bairro', 'Cidade'])
-
+        self.tb_clientes.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        
         self.db = Data_base()
         self.buscar_clientes()
 
@@ -211,6 +212,14 @@ class clienteWindow(QMainWindow):
         self.bt_att_tb_cliente.triggered.connect(self.buscar_clientes)
         self.bt_alt_dados.triggered.connect(self.alterar_clientes)
         self.bt_del_dados.triggered.connect(self.deletar_clientes)
+
+        # setando largura das colunas
+        # self.tb_clientes.setColumnWidth(0, 150)
+        # self.tb_clientes.setColumnWidth(3, 69)
+        # self.tb_clientes.setColumnWidth(4, 100)
+        # self.tb_clientes.setColumnWidth(5, 50)
+        
+        
         
         toolbar.addAction(self.bt_cadastrarCliente)
         toolbar.addAction(self.bt_att_tb_cliente)
@@ -225,7 +234,7 @@ class clienteWindow(QMainWindow):
 
 
         self.setCentralWidget(container)
-        self.setFixedSize(QSize(950,800))
+        self.setFixedSize(QSize(920,600))
 
     def buscar_clientes(self):
         result = self.db.select_all_clientes()
@@ -491,6 +500,7 @@ class produtoWindow(QMainWindow):
         self.tb_Produtos = QTableWidget()
         self.tb_Produtos.setColumnCount(4)
         self.tb_Produtos.setHorizontalHeaderLabels(['COD', 'NOME', 'TIPO', 'PRECO'])
+        self.tb_Produtos.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
         self.db = Data_base()
         self.buscar_produtos()
@@ -499,6 +509,13 @@ class produtoWindow(QMainWindow):
         self.bt_att_tb_Produto.triggered.connect(self.buscar_produtos)
         self.bt_alt_dados.triggered.connect(self.alterar_produtos)
         self.bt_del_dados.triggered.connect(self.deletar_produtos)
+
+        # setando largura das colunas
+        self.tb_Produtos.setColumnWidth(0, 55)
+        self.tb_Produtos.setColumnWidth(1, 225)
+        self.tb_Produtos.setColumnWidth(2, 100)
+        self.tb_Produtos.setColumnWidth(3, 120)
+        
         
         toolbar.addAction(self.bt_cadastrarProduto)
         toolbar.addAction(self.bt_att_tb_Produto)
@@ -513,7 +530,7 @@ class produtoWindow(QMainWindow):
 
 
         self.setCentralWidget(container)
-        self.setFixedSize(QSize(950,800))
+        self.setFixedSize(QSize(540,550))
 
     def msg(self, tipo, mensage):
         msgbox = QMessageBox()
@@ -745,7 +762,7 @@ class veiculoWindow(QMainWindow):
 
 
         self.setCentralWidget(container)
-        self.setFixedSize(QSize(600,800))
+        self.setFixedSize(QSize(600,600))
 
     def msg(self, tipo, mensage):
         msgbox = QMessageBox()
@@ -989,13 +1006,15 @@ class servicosWindow(QMainWindow):
         container.setLayout(layout)
 
         self.setCentralWidget(container)
-        self.setFixedSize(QSize(520,800))
+        self.setFixedSize(QSize(520,600))
 
     def show_cadastroProduto(self):
         if  self.w_cadastroServicoWindow.isVisible():
             self.w_cadastroServicoWindow.hide()
         else:
             self.w_cadastroServicoWindow.show()
+
+    
         
 class cadastroServicoWindow(QMainWindow):
     def __init__(self):
@@ -1012,6 +1031,8 @@ class cadastroServicoWindow(QMainWindow):
         self.bt_buscar.setStatusTip('Buscar cadastro de clientes')
         self.bt_buscar.triggered.connect(self.buscar_placa)
         self.bt_buscar.triggered.connect(self.buscar_cpf)
+        self.bt_buscar.triggered.connect(self.buscar_produtos)
+
 
         toolbar.addAction(self.bt_buscar)
 
@@ -1030,6 +1051,19 @@ class cadastroServicoWindow(QMainWindow):
         self.tb_veiculos.setHorizontalHeaderLabels(['Placa', 'Cpf', 'Marca', 'Modelo', 'Cor', 'Ano','Selecionar'])
         # bloquear a edição dos campos da tabela
         self.tb_veiculos.setEditTriggers(QAbstractItemView.NoEditTriggers)      
+
+
+        
+        self.tb_produtos = QTableWidget()
+        self.tb_produtos.setColumnCount(5)
+        self.tb_produtos.setHorizontalHeaderLabels(['COD', 'NOME', 'TIPO', 'PRECO','SELECIONAR'])
+        # bloquear a edição dos campos da tabela
+        self.tb_produtos.setEditTriggers(QAbstractItemView.NoEditTriggers)    
+
+        # setando largura das colunas
+        self.tb_produtos.setColumnWidth(1, 250)
+        self.tb_produtos.setColumnWidth(4, 115)
+          
      
         layout = QVBoxLayout()
         layout.addWidget(self.lbl_placa)
@@ -1037,16 +1071,45 @@ class cadastroServicoWindow(QMainWindow):
         layout.addWidget(self.lbl_cpf)
         layout.addWidget(self.txt_cpf)
         layout.addWidget(self.tb_veiculos)
-        # layout.addWidget(self.tb_produtos)
+        layout.addWidget(self.tb_produtos)
 
         container = QWidget()
         container.setLayout(layout)
 
         self.db = Data_base()
-        # self.buscar_produtos()     
+        self.buscar_produtos()     
 
         self.setCentralWidget(container)
-        self.setFixedSize(QSize(1000, 1000))
+        self.setFixedSize(QSize(720, 720))
+
+    def closeEvent(self, event):
+            # limpa os dados da janela
+            self.tb_veiculos.clearContents()
+            self.tb_produtos.clearContents()
+            self.txt_cpf.clear()
+            self.txt_placa.clear()
+
+            # chama o método closeEvent original da classe QMainWindow
+            super().closeEvent(event)        
+            
+            
+
+    # chama a função buscar_produtos() para preencher a tabela na interface gráfica
+    def buscar_produtos(self):      
+      result = self.db.select_all_produtos()
+      self.tb_produtos.clearContents()
+      self.tb_produtos.setRowCount(len(result))
+      self.tb_produtos.setColumnCount(5) # adiciona uma nova coluna
+
+      for i, row in enumerate(result):
+          for j, value in enumerate(row):
+              item = QTableWidgetItem(str(value))
+              self.tb_produtos.setItem(i, j, item)
+
+          # adiciona um checkbox na nova coluna
+          checkbox = QCheckBox()
+          checkbox.setStyleSheet("QCheckBox::indicator {alignment: center;}")
+          self.tb_produtos.setCellWidget(i, 4, checkbox) # adiciona o checkbox na coluna "Selecionar"
 
 
     # Função para configurar o estado inicial do checkbox
@@ -1086,9 +1149,6 @@ class cadastroServicoWindow(QMainWindow):
               self.tb_veiculos.setItem(row, 5, QTableWidgetItem(str(veiculo[5])))
               self.set_checkbox_state(row, False)
 
-
-
-    
 
 
     def buscar_cpf(self):
