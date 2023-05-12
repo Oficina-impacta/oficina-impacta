@@ -1033,8 +1033,13 @@ class cadastroServicoWindow(QMainWindow):
         self.bt_buscar.triggered.connect(self.buscar_cpf)
         self.bt_buscar.triggered.connect(self.buscar_produtos)
 
+        self.bt_gerar_pedido = QAction('Gerar pedido')
+        self.bt_gerar_pedido.setStatusTip('Gerar pedido')
+        self.bt_gerar_pedido.triggered.connect(self.gerar_pedido)
+
 
         toolbar.addAction(self.bt_buscar)
+        toolbar.addAction(self.bt_gerar_pedido)
 
         self.lbl_cpf = QLabel('CPF: ')
         self.txt_cpf = QLineEdit()
@@ -1167,7 +1172,10 @@ class cadastroServicoWindow(QMainWindow):
                   self.tb_veiculos.setCellWidget(row, 6, checkbox)
               return 'cpf' # retorna 'cpf' para indicar que a busca foi bem sucedida
 
-            
+    def gerar_pedido(self):
+
+        for row in range(self.tb_produtos.rowCount()):
+            print(self.tb_produtos.column(5))
 
    
 
