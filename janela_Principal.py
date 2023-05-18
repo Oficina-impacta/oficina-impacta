@@ -1,5 +1,5 @@
 import sys
-from PySide6.QtGui import QAction, QPixmap
+from PySide6.QtGui import QAction, QPixmap, QFont, QColor
 from PySide6.QtCore import QSize, Qt
 from PySide6 import QtCore
 from PySide6.QtWidgets import *
@@ -7,6 +7,7 @@ from database import Data_base
 # import pandas as pd
 import pycep_correios
 from PySide6.QtWidgets import QTableWidget, QTableWidgetItem, QCheckBox
+
 
 
 
@@ -51,7 +52,6 @@ class LoginWindow(QDialog):
                 self.reject()
             else:
                 QMessageBox.warning(self, "Login incorreto", "Nome de usuário ou senha incorretos. Tente novamente.")
-
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -880,6 +880,52 @@ class veiculoWindow(QMainWindow):
             QMessageBox.warning(self, 'Erro', result[1])
             print(result[1])
 
+class PedidoWindow(QDialog):
+    def __init__(self, numero_pedido, produtos_selecionados):
+        super().__init__()
+
+        self.setWindowTitle("Nova Janela de Pedido")
+        layout = QVBoxLayout()
+
+        lbl_numero_pedido = QLabel(f'Número do pedido: {numero_pedido}')
+        font = QFont("Arial", 18)  # Tamanho da fonte
+        lbl_numero_pedido.setFont(font)
+
+        color = QColor(255, 0, 0)  # Color Fonte
+        lbl_numero_pedido.setStyleSheet(f"color: {color.name()}")
+        layout.addWidget(lbl_numero_pedido)
+
+
+        table3 = QTableWidget()
+        table3.setColumnCount(4)
+        table3.setHorizontalHeaderLabels(['COD', 'SERVIÇO', 'TIPO', 'PRECO'])
+        table3.setEditTriggers(QAbstractItemView.NoEditTriggers)
+
+
+        for i, produto in enumerate(produtos_selecionados):
+            table3.insertRow(i)
+            for j, data in enumerate(produto):
+                item = QTableWidgetItem(str(data))
+                table3.setItem(i, j, item)
+
+        table1 = QTableWidget()
+        table1.setColumnCount(4)
+        table1.setHorizontalHeaderLabels(['NOME', 'CPF', 'TELEFONE','CEP'])
+        table1.setEditTriggers(QAbstractItemView.NoEditTriggers)
+
+        table2 = QTableWidget()
+        table2.setColumnCount(4)
+        table2.setHorizontalHeaderLabels(['PLACA', 'MARCA', 'MODELO','COR VEICULO'])
+        table2.setEditTriggers(QAbstractItemView.NoEditTriggers)
+
+        layout.addWidget(table1)
+        layout.addWidget(table2)
+        layout.addWidget(table3)
+
+        self.setLayout(layout)
+        self.setFixedSize(435, 400)
+
+
 class cadastroVeiculoWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -1014,9 +1060,9 @@ class servicosWindow(QMainWindow):
         else:
             self.w_cadastroServicoWindow.show()
 
-    
-        
+            
 class cadastroServicoWindow(QMainWindow):
+    numero_pedido = 1000  # Número inicial do pedido
     def __init__(self):
         super().__init__()
 
@@ -1035,7 +1081,7 @@ class cadastroServicoWindow(QMainWindow):
 
         self.bt_gerar_pedido = QAction('Gerar pedido')
         self.bt_gerar_pedido.setStatusTip('Gerar pedido')
-        self.bt_gerar_pedido.triggered.connect(self.gerar_pedido)
+        self.bt_gerar_pedido.triggered.connect(self.abrir_janela_pedido)
 
 
         toolbar.addAction(self.bt_buscar)
@@ -1056,7 +1102,6 @@ class cadastroServicoWindow(QMainWindow):
         self.tb_veiculos.setHorizontalHeaderLabels(['Placa', 'Cpf', 'Marca', 'Modelo', 'Cor', 'Ano','Selecionar'])
         # bloquear a edição dos campos da tabela
         self.tb_veiculos.setEditTriggers(QAbstractItemView.NoEditTriggers)      
-
 
         
         self.tb_produtos = QTableWidget()
@@ -1087,6 +1132,29 @@ class cadastroServicoWindow(QMainWindow):
         self.setCentralWidget(container)
         self.setFixedSize(QSize(720, 720))
 
+    def abrir_janela_pedido(self):
+        # Lógica para gerar o número do pedido
+        self.numero_pedido += 1
+
+        produtos_selecionados = []
+        for row in range(self.tb_produtos.rowCount()):
+            checkbox = self.tb_produtos.cellWidget(row, 4)
+            if checkbox.isChecked():
+                produto = []
+                for column in range(self.tb_produtos.columnCount() - 1):  # Ignorar a coluna do checkbox
+                    item = self.tb_produtos.item(row, column)
+                    if item:
+                        produto.append(item.text())
+                    else:
+                        produto.append('')
+                produtos_selecionados.append(produto)
+
+        if produtos_selecionados:
+            nova_janela_pedido = PedidoWindow(self.numero_pedido, produtos_selecionados)
+            nova_janela_pedido.exec_()
+
+
+
     def closeEvent(self, event):
             # limpa os dados da janela
             self.tb_veiculos.clearContents()
@@ -1095,11 +1163,10 @@ class cadastroServicoWindow(QMainWindow):
             self.txt_placa.clear()
 
             # chama o método closeEvent original da classe QMainWindow
-            super().closeEvent(event)        
-            
-            
+            super().closeEvent(event)      
 
-    # chama a função buscar_produtos() para preencher a tabela na interface gráfica
+    
+   # chama a função buscar_produtos() para preencher a tabela na interface gráfica
     def buscar_produtos(self):      
       result = self.db.select_all_produtos()
       self.tb_produtos.clearContents()
@@ -1124,13 +1191,13 @@ class cadastroServicoWindow(QMainWindow):
         checkbox.stateChanged.connect(lambda: self.update_checkbox_state(row, checkbox.isChecked()))
         self.tb_veiculos.setCellWidget(row, 6, checkbox)
 
+
     # Função para atualizar o estado do checkbox
     def update_checkbox_state(self, row, state):
         checkbox = self.tb_veiculos.cellWidget(row, 6)
         checkbox.setChecked(state)
 
   
-
     def buscar_placa(self):
       placa = self.txt_placa.text().upper()
       if placa:
@@ -1155,7 +1222,6 @@ class cadastroServicoWindow(QMainWindow):
               self.set_checkbox_state(row, False)
 
 
-
     def buscar_cpf(self):
       cpf = self.txt_cpf.text()
       if cpf:
@@ -1172,12 +1238,7 @@ class cadastroServicoWindow(QMainWindow):
                   self.tb_veiculos.setCellWidget(row, 6, checkbox)
               return 'cpf' # retorna 'cpf' para indicar que a busca foi bem sucedida
 
-    def gerar_pedido(self):
-
-        for row in range(self.tb_produtos.rowCount()):
-            print(self.tb_produtos.column(5))
-
-   
+  
 
             
  
