@@ -881,7 +881,7 @@ class veiculoWindow(QMainWindow):
             print(result[1])
 
 class PedidoWindow(QDialog):
-    def __init__(self, numero_pedido, produtos_selecionados):
+    def __init__(self, numero_pedido, produtos_selecionados, veiculos_selecionados, clientes_selecionados):
         super().__init__()
 
         self.setWindowTitle("Nova Janela de Pedido")
@@ -913,10 +913,22 @@ class PedidoWindow(QDialog):
         table1.setHorizontalHeaderLabels(['NOME', 'CPF', 'TELEFONE','CEP'])
         table1.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
+        for i, cliente in enumerate(clientes_selecionados):
+            table1.insertRow(i)
+            for j, data in enumerate(cliente):
+                item = QTableWidgetItem(str(data))
+                table1.setItem(i, j, item)        
+
         table2 = QTableWidget()
         table2.setColumnCount(4)
         table2.setHorizontalHeaderLabels(['PLACA', 'MARCA', 'MODELO','COR VEICULO'])
         table2.setEditTriggers(QAbstractItemView.NoEditTriggers)
+
+        for i, veiculo in enumerate(veiculos_selecionados):
+            table2.insertRow(i)
+            for j, data in enumerate(veiculo):
+                item = QTableWidgetItem(str(data))
+                table2.setItem(i, j, item)        
 
         layout.addWidget(table1)
         layout.addWidget(table2)
@@ -1097,6 +1109,12 @@ class cadastroServicoWindow(QMainWindow):
         self.txt_placa.setInputMask('AAA-9999')
         self.txt_placa.setFixedWidth(100)
 
+        self.tb_clientes = QTableWidget()
+        self.tb_clientes.setColumnCount(5)
+        self.tb_clientes.setHorizontalHeaderLabels(['Nome', 'Cpf', 'Telefone', 'Cep','Selecionar'])
+        # bloquear a edição dos campos da tabela
+        self.tb_clientes.setEditTriggers(QAbstractItemView.NoEditTriggers)         
+
         self.tb_veiculos = QTableWidget()
         self.tb_veiculos.setColumnCount(7)
         self.tb_veiculos.setHorizontalHeaderLabels(['Placa', 'Cpf', 'Marca', 'Modelo', 'Cor', 'Ano','Selecionar'])
@@ -1149,8 +1167,34 @@ class cadastroServicoWindow(QMainWindow):
                         produto.append('')
                 produtos_selecionados.append(produto)
 
+        veiculos_selecionados = []
+        for row in range(self.tb_veiculos.rowCount()):
+            checkbox = self.tb_veiculos.cellWidget(row, 6)
+            if checkbox.isChecked():
+                veiculo = []
+                for column in range(self.tb_veiculos.columnCount() - 1):  # Ignorar a coluna do checkbox
+                    item = self.tb_veiculos.item(row, column)
+                    if item:
+                        veiculo.append(item.text())
+                    else:
+                        veiculo.append('')
+                veiculos_selecionados.append(veiculo)
+
+        clientes_selecionados = []
+        for row in range(self.tb_clientes.rowCount()):
+            checkbox = self.tb_clientes.cellWidget(row, 4)
+            if checkbox.isChecked():
+                cliente = []
+                for column in range(self.tb_clientes.columnCount() - 1):  # Ignorar a coluna do checkbox
+                    item = self.tb_clientes.item(row, column)
+                    if item:
+                        cliente.append(item.text())
+                    else:
+                        cliente.append('')
+                clientes_selecionados.append(cliente)
+
         if produtos_selecionados:
-            nova_janela_pedido = PedidoWindow(self.numero_pedido, produtos_selecionados)
+            nova_janela_pedido = PedidoWindow(self.numero_pedido, produtos_selecionados, veiculos_selecionados, clientes_selecionados)
             nova_janela_pedido.exec_()
 
 
