@@ -9,9 +9,6 @@ import pycep_correios
 from PySide6.QtWidgets import QTableWidget, QTableWidgetItem, QCheckBox
 import re
 
-
-
-
 class LoginWindow(QDialog):
     def __init__(self):
         super().__init__()
@@ -887,6 +884,9 @@ class PedidoWindow(QDialog):
         self.setWindowTitle("Nova Janela de Pedido")
         layout = QVBoxLayout()
 
+        btn_confirmar_pedido = QPushButton('Confirmar pedido')
+        layout.addWidget(btn_confirmar_pedido)
+
         lbl_numero_pedido = QLabel(f'Número do pedido: {numero_pedido}')
         font = QFont("Arial", 18)  # Tamanho da fonte
         lbl_numero_pedido.setFont(font)
@@ -1081,8 +1081,7 @@ class servicosWindow(QMainWindow):
             self.w_cadastroServicoWindow.hide()
         else:
             self.w_cadastroServicoWindow.show()
-
-            
+     
 class cadastroServicoWindow(QMainWindow):
     numero_pedido = 1000  # Número inicial do pedido
     def __init__(self):
@@ -1292,10 +1291,6 @@ class cadastroServicoWindow(QMainWindow):
                   self.tb_veiculos.setCellWidget(row, 6, checkbox)
               return 'cpf' # retorna 'cpf' para indicar que a busca foi bem sucedida
 
-  
-
-            
- 
 app = QApplication(sys.argv)
 app.setStyle('Fusion')
 db = Data_base()
