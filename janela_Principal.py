@@ -7,7 +7,7 @@ from database import Data_base
 # import pandas as pd
 import pycep_correios
 from PySide6.QtWidgets import QTableWidget, QTableWidgetItem, QCheckBox
-
+import re
 
 
 
@@ -934,9 +934,19 @@ class PedidoWindow(QDialog):
         layout.addWidget(table2)
         layout.addWidget(table3)
 
+        # Campo para carregar o valor total dos itens de produtos selecionados
+        total_label = QLabel("Valor total do pedido: ")
+        font = QFont("Arial", 14)  # Crie uma instância QFont com o tamanho da fonte desejado
+        total_label.setFont(font)  # Aplique a fonte ao QLabel
+        total_value = sum(float(re.sub('[^\d.]', '', produto[3].replace(',', '.'))) for produto in produtos_selecionados)  # Soma dos valores da coluna de preço
+        total_label.setText(total_label.text() + f'R$ {total_value:.2f}')
+
+        layout.addWidget(total_label)
+
+
+
         self.setLayout(layout)
         self.setFixedSize(435, 400)
-
 
 class cadastroVeiculoWindow(QMainWindow):
     def __init__(self):
