@@ -8,6 +8,7 @@ from database import Data_base
 import pycep_correios
 from PySide6.QtWidgets import QTableWidget, QTableWidgetItem, QCheckBox
 import re
+from PySide6.QtWidgets import QAbstractItemView, QTableWidget, QTableWidgetItem
 
 class LoginWindow(QDialog):
     def __init__(self):
@@ -878,7 +879,7 @@ class veiculoWindow(QMainWindow):
             print(result[1])
 
 class PedidoWindow(QDialog):
-    def __init__(self, numero_pedido, produtos_selecionados, veiculos_selecionados, clientes_selecionados):
+    def __init__(self, numero_pedido, produtos_selecionados, veiculos_selecionados, tabela):
         super().__init__()
 
         self.setWindowTitle("Nova Janela de Pedido")
@@ -888,19 +889,16 @@ class PedidoWindow(QDialog):
         layout.addWidget(btn_confirmar_pedido)
 
         lbl_numero_pedido = QLabel(f'Número do pedido: {numero_pedido}')
-        font = QFont("Arial", 18)  # Tamanho da fonte
+        font = QFont("Arial", 18)
         lbl_numero_pedido.setFont(font)
-
-        color = QColor(255, 0, 0)  # Color Fonte
+        color = QColor(255, 0, 0)
         lbl_numero_pedido.setStyleSheet(f"color: {color.name()}")
         layout.addWidget(lbl_numero_pedido)
-
 
         table3 = QTableWidget()
         table3.setColumnCount(4)
         table3.setHorizontalHeaderLabels(['COD', 'SERVIÇO', 'TIPO', 'PRECO'])
         table3.setEditTriggers(QAbstractItemView.NoEditTriggers)
-
 
         for i, produto in enumerate(produtos_selecionados):
             table3.insertRow(i)
@@ -908,43 +906,28 @@ class PedidoWindow(QDialog):
                 item = QTableWidgetItem(str(data))
                 table3.setItem(i, j, item)
 
-        table1 = QTableWidget()
-        table1.setColumnCount(4)
-        table1.setHorizontalHeaderLabels(['NOME', 'CPF', 'TELEFONE','CEP'])
-        table1.setEditTriggers(QAbstractItemView.NoEditTriggers)
-
-        for i, cliente in enumerate(clientes_selecionados):
-            table1.insertRow(i)
-            for j, data in enumerate(cliente):
-                item = QTableWidgetItem(str(data))
-                table1.setItem(i, j, item)        
-
         table2 = QTableWidget()
         table2.setColumnCount(4)
-        table2.setHorizontalHeaderLabels(['PLACA', 'MARCA', 'MODELO','COR VEICULO'])
+        table2.setHorizontalHeaderLabels(['PLACA', 'MARCA', 'MODELO', 'COR VEICULO'])
         table2.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
         for i, veiculo in enumerate(veiculos_selecionados):
             table2.insertRow(i)
             for j, data in enumerate(veiculo):
                 item = QTableWidgetItem(str(data))
-                table2.setItem(i, j, item)        
+                table2.setItem(i, j, item)
 
-        layout.addWidget(table1)
+        layout.addWidget(tabela)
         layout.addWidget(table2)
         layout.addWidget(table3)
 
-        # Campo para carregar o valor total dos itens de produtos selecionados
         total_label = QLabel("Valor total do pedido: ")
-        font = QFont("Arial", 14)  # Crie uma instância QFont com o tamanho da fonte desejado
-        total_label.setFont(font)  # Aplique a fonte ao QLabel
-        total_value = sum(float(re.sub('[^\d.]', '', produto[3].replace(',', '.'))) for produto in produtos_selecionados)  # Soma dos valores da coluna de preço
+        font = QFont("Arial", 14)
+        total_label.setFont(font)
+        total_value = sum(float(re.sub('[^\d.]', '', produto[3].replace(',', '.'))) for produto in produtos_selecionados)
         total_label.setText(total_label.text() + f'R$ {total_value:.2f}')
 
         layout.addWidget(total_label)
-
-
-
         self.setLayout(layout)
         self.setFixedSize(435, 400)
 
@@ -1159,7 +1142,8 @@ class cadastroServicoWindow(QMainWindow):
         self.setCentralWidget(container)
         self.setFixedSize(QSize(720, 720))
 
-    def abrir_janela_pedido(self):
+    def abrir_janela_pedido(self):      
+        self.db = Data_base()
         # Lógica para gerar o número do pedido
         self.numero_pedido += 1
 
@@ -1189,23 +1173,38 @@ class cadastroServicoWindow(QMainWindow):
                         veiculo.append('')
                 veiculos_selecionados.append(veiculo)
 
-        clientes_selecionados = []
-        for row in range(self.tb_clientes.rowCount()):
-            checkbox = self.tb_clientes.cellWidget(row, 4)
-            if checkbox.isChecked():
-                cliente = []
-                for column in range(self.tb_clientes.columnCount() - 1):  # Ignorar a coluna do checkbox
-                    item = self.tb_clientes.item(row, column)
-                    if item:
-                        cliente.append(item.text())
-                    else:
-                        cliente.append('')
-                clientes_selecionados.append(cliente)
-
         if produtos_selecionados:
-            nova_janela_pedido = PedidoWindow(self.numero_pedido, produtos_selecionados, veiculos_selecionados, clientes_selecionados)
-            nova_janela_pedido.exec_()
+            cpf_veiculo_selecionado = veiculo[1]  # Supondo que o CPF esteja na posição 2 da lista "veiculo"
 
+            # Chamada à função do arquivo database.py para obter os dados do cliente
+            cliente_correspondente = self.db.obter_dados_cliente_por_cpf_veiculo(cpf_veiculo_selecionado)
+            print("CPF do veículo selecionado:", cpf_veiculo_selecionado)
+
+
+            if cliente_correspondente:
+                # Cria a tabela "table1" e define o número de linhas
+                self.table1 = QTableWidget()
+                self.table1.setColumnCount(4)
+                self.table1.setHorizontalHeaderLabels(['NOME', 'CPF', 'TELEFONE', 'CEP'])
+                self.table1.setEditTriggers(QAbstractItemView.NoEditTriggers)
+                self.table1.setRowCount(1)
+                print("Dados do cliente correspondente:", cliente_correspondente)
+            
+                # Preenche as células da tabela com os dados do cliente
+                nome_item = QTableWidgetItem(cliente_correspondente[0])
+                cpf_item = QTableWidgetItem(cliente_correspondente[1])
+                telefone_item = QTableWidgetItem(cliente_correspondente[2])
+                cep_item = QTableWidgetItem(cliente_correspondente[3])
+            
+                self.table1.setItem(0, 0, nome_item)       # Nome
+                self.table1.setItem(0, 1, cpf_item)        # CPF
+                self.table1.setItem(0, 2, telefone_item)   # Telefone
+                self.table1.setItem(0, 3, cep_item)        # CEP
+
+
+                # Passa a tabela table1 como um único elemento em uma lista para a classe PedidoWindow
+                nova_janela_pedido = PedidoWindow(self.numero_pedido, produtos_selecionados, veiculos_selecionados, self.table1)
+                nova_janela_pedido.exec_()
 
 
     def closeEvent(self, event):
