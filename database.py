@@ -18,7 +18,6 @@ class Data_base:
         except Exception as e:
             print(e)
     
-    
     #função criando tabelas
     def create_table_clientes(self):
         self.connect()
@@ -38,29 +37,7 @@ class Data_base:
        BAIRRO TEXT,
        CIDADE, TEXT,
 
-       PRIMARY KEY (CPF)
-       );
-
-                            """)
-        self.close_connection()
-
-    def create_table_servicos(self):
-        self.connect()
-        cursor = self.connection.cursor()
-        cursor.execute("""
-        
-
-                        CREATE TABLE IF NOT EXISTS Servicos(
-
-       OS TEXT,
-       CPF TEXT,
-       PLACA TEXT,
-       CEP TEXT,
-       PAGAMENTO TEXT,
-       VALOR TEXT,
-       STATUS TEXT,
-
-       PRIMARY KEY (OS)
+       PRIMARY KEY (PEDIDO)
        );
 
                             """)
@@ -96,7 +73,47 @@ class Data_base:
        COR TEXT,
        ANO TEXT,
 
-       PRIMARY KEY (placa)
+       PRIMARY KEY (PLACA)
+       );
+
+                            """)
+        self.close_connection()
+
+    def create_table_os_aberta(self):
+        self.connect()
+        cursor = self.connection.cursor()
+        cursor.execute("""
+
+                        CREATE TABLE IF NOT EXISTS OsAbertas(
+       PEDIDO TEXT NOT NULL,
+       NOME TEXT,                     
+       CPF TEXT,
+       PLACA TEXT,
+       MARCA TEXT,
+       MODELO TEXT,
+       VALOR TEXT,
+
+       PRIMARY KEY (PEDIDO)
+       );
+
+                            """)
+        self.close_connection()
+
+    def create_table_os_fechadas(self):
+        self.connect()
+        cursor = self.connection.cursor()
+        cursor.execute("""
+
+                        CREATE TABLE IF NOT EXISTS OsFechadas(
+       PEDIDO TEXT NOT NULL,
+       NOME TEXT,                     
+       CPF TEXT,
+       PLACA TEXT,
+       MARCA TEXT,
+       MODELO TEXT,
+       VALOR TEXT,
+
+       PRIMARY KEY (PEDIDO)
        );
 
                             """)
@@ -206,6 +223,28 @@ class Data_base:
         finally:
             self.close_connection()
 
+    # Função para registar as ordens de serviços criadas    
+    def registro_pedido(self, fullDataSet):
+
+        self.connect()
+        campos_tabela = ('pedido', 'nome', 'cpf', 'placa','marca','modelo', 'valor')
+        qntd = ("?,?,?,?,?,?,?")
+        cursor = self.connection.cursor()
+
+        #REGISTRAR OS DADOS
+        try:
+            cursor.execute(f"""INSERT INTO OsAbertas {campos_tabela}
+                    VALUES ({qntd})""", fullDataSet)
+            self.connection.commit()
+
+            return "OK", "Pedido criado com sucesso"
+        except Exception as e:
+            print(e)
+            return 'erro', str(e)
+
+        finally:
+            self.close_connection()            
+
     #Função selecionar Clientes
     def select_all_clientes(self):
         try:
@@ -244,6 +283,20 @@ class Data_base:
             print(e)
         finally:
             self.close_connection()
+
+#Função selecionar pedidos
+    def select_all_pedidos(self):
+        try:
+            self.connect()
+            cursor = self.connection.cursor()
+            cursor.execute("SELECT * FROM OsAberta ORDER BY PEDIDO")
+            pedidos = cursor.fetchall()
+            return pedidos
+        except Exception as e:
+            print(e)
+        finally:
+            self.close_connection()
+
 
     #Função deletar clientes
     def delete_clientes(self, cpf):
@@ -352,7 +405,6 @@ class Data_base:
         finally:
             self.close_connection()
 
-    
     def select_veiculo_by_placa(self, placa):
        try:
            self.connect()
@@ -365,7 +417,6 @@ class Data_base:
        finally:
            self.close_connection()
 
-    
     def select_veiculos_by_cpf(self, cpf):
         try:
             self.connect()
@@ -378,9 +429,6 @@ class Data_base:
         finally:
             self.close_connection()
 
-
-
-
     def obter_dados_cliente_por_cpf_veiculo(self, cpf_veiculo):
        try:
            self.connect()
@@ -392,4 +440,3 @@ class Data_base:
            print(e)
        finally:
            self.close_connection()
-

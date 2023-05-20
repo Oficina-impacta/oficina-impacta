@@ -885,8 +885,12 @@ class PedidoWindow(QDialog):
         self.setWindowTitle("Nova Janela de Pedido")
         layout = QVBoxLayout()
 
+        self.db = Data_base()
+
         btn_confirmar_pedido = QPushButton('Confirmar pedido')
         layout.addWidget(btn_confirmar_pedido)
+
+        btn_confirmar_pedido.triggered.connect(self.db.registro_pedido)
 
         lbl_numero_pedido = QLabel(f'Número do pedido: {numero_pedido}')
         font = QFont("Arial", 18)
@@ -1030,6 +1034,9 @@ class cadastroVeiculoWindow(QMainWindow):
 class servicosWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+        self.db = Data_base()
+        self.buscar_pedido()
+
         self.w_cadastroServicoWindow = cadastroServicoWindow()
 
         self.setWindowTitle("Serviços em Aberto")
@@ -1037,14 +1044,14 @@ class servicosWindow(QMainWindow):
         self.addToolBar(toolbar)
 
         self.bt_Gerar_nova_os = QAction('Gerar nova ordem de serviço')
-        self.bt_alt_os = QAction('Alterar ordem de serviço')
-        self.bt_del_os = QAction('Deletar ordem de serviço')
+        self.bt_aprovar_os = QAction('Aprovar ordem de serviço')
+        self.bt_cancelar_os = QAction('Cancelar ordem de serviço')
 
         self.bt_Gerar_nova_os.triggered.connect(self.show_cadastroProduto)
 
         toolbar.addAction(self.bt_Gerar_nova_os)
-        toolbar.addAction(self.bt_alt_os)
-        toolbar.addAction(self.bt_del_os)
+        toolbar.addAction(self.bt_aprovar_os)
+        toolbar.addAction(self.bt_cancelar_os)
 
         self.tb_servicos = QTableWidget()
         self.tb_servicos.setColumnCount(5)
@@ -1064,6 +1071,15 @@ class servicosWindow(QMainWindow):
             self.w_cadastroServicoWindow.hide()
         else:
             self.w_cadastroServicoWindow.show()
+    
+    def buscar_pedido(self):
+        result = self.db.select_all_pedidos()
+        self.tb_servicos.clearContents()
+        self.tb_servicos.setRowCount(len(result))
+
+        for row, text in enumerate(result):
+            for column, data in enumerate(text):
+                self.tb_servicos.setItem(row, column, QTableWidgetItem(str(data)))
      
 class cadastroServicoWindow(QMainWindow):
     numero_pedido = 1000  # Número inicial do pedido
@@ -1185,7 +1201,7 @@ class cadastroServicoWindow(QMainWindow):
                 # Cria a tabela "table1" e define o número de linhas
                 self.table1 = QTableWidget()
                 self.table1.setColumnCount(4)
-                self.table1.setHorizontalHeaderLabels(['NOME', 'CPF', 'TELEFONE', 'CEP'])
+                self.table1.setHorizontalHeaderLabels(['PROPRIETARIO', 'CPF', 'TELEFONE', 'CEP'])
                 self.table1.setEditTriggers(QAbstractItemView.NoEditTriggers)
                 self.table1.setRowCount(1)
                 print("Dados do cliente correspondente:", cliente_correspondente)
@@ -1296,6 +1312,8 @@ db = Data_base()
 db.create_table_clientes()
 db.create_table_produtos()
 db.create_table_veiculos()
+db.create_table_os_aberta()
+db.create_table_os_fechadas()
 w = MainWindow()
 w.show()
 app.exec()
