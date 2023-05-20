@@ -1,6 +1,4 @@
 import sqlite3
-import re
-from PySide6.QtWidgets import QMessageBox
 
 
 # #Criando o Banco de Dados:
@@ -379,3 +377,19 @@ class Data_base:
             print(e)
         finally:
             self.close_connection()
+
+
+
+
+    def obter_dados_cliente_por_cpf_veiculo(self, cpf_veiculo):
+       try:
+           self.connect()
+           cursor = self.connection.cursor()
+           cursor.execute("SELECT c.nome, c.cpf, c.telefone, c.cep FROM Clientes c JOIN Veiculos v ON c.cpf = v.cpf WHERE REPLACE(v.CPF, '.', '') = REPLACE(?, '.', '') AND REPLACE(v.CPF, '-', '') = REPLACE(?, '-', '')", (cpf_veiculo, cpf_veiculo))
+           cliente_correspondente = cursor.fetchone()  # Recupera apenas um cliente correspondente
+           return cliente_correspondente
+       except Exception as e:
+           print(e)
+       finally:
+           self.close_connection()
+
