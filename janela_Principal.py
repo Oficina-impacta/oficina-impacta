@@ -882,15 +882,15 @@ class PedidoWindow(QDialog):
     def __init__(self, numero_pedido, produtos_selecionados, veiculos_selecionados, tabela):
         super().__init__()
 
+        self.db = Data_base()
+
         self.setWindowTitle("Nova Janela de Pedido")
         layout = QVBoxLayout()
 
-        self.db = Data_base()
+        self.btn_confirmar_pedido = QPushButton('Confirmar pedido')
+        layout.addWidget(self.btn_confirmar_pedido)
 
-        btn_confirmar_pedido = QPushButton('Confirmar pedido')
-        layout.addWidget(btn_confirmar_pedido)
-
-        btn_confirmar_pedido.triggered.connect(self.db.registro_pedido)
+        self.btn_confirmar_pedido.clicked.connect(self.cadastrar_pedido_bd)
 
         lbl_numero_pedido = QLabel(f'Número do pedido: {numero_pedido}')
         font = QFont("Arial", 18)
@@ -934,6 +934,29 @@ class PedidoWindow(QDialog):
         layout.addWidget(total_label)
         self.setLayout(layout)
         self.setFixedSize(435, 400)
+
+    def cadastrar_pedido_bd(self):
+        
+        fullDataSet = (
+            self.txt_nome.text(), self.txt_cpf.text(), self.txt_telefone.text(), self.txt_inf_cep.text(), self.txt_logradouro.text(),
+            self.txt_numero_res.text(), self.txt_complemento.text(), self.txt_bairro.text(),
+            self.txt_cidade.text(),
+        )
+
+        resp = self.db.registro_pedido(fullDataSet)
+        self.msg(resp[0], resp[1])
+
+    def msg(self, tipo, mensage):
+        msgbox = QMessageBox()
+        if tipo.lower() == 'ok':
+            msgbox.setIcon(QMessageBox.Information)
+        elif tipo.lower() == 'ERRO':
+            msgbox.setIcon(QMessageBox.Critical)
+        elif tipo.lower() == 'aviso':
+            msgbox.setIcon(QMessageBox.Warning)
+        
+        msgbox.setText(mensage)
+        msgbox.exec()
 
 class cadastroVeiculoWindow(QMainWindow):
     def __init__(self):
@@ -1034,9 +1057,6 @@ class cadastroVeiculoWindow(QMainWindow):
 class servicosWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.db = Data_base()
-        self.buscar_pedido()
-
         self.w_cadastroServicoWindow = cadastroServicoWindow()
 
         self.setWindowTitle("Serviços em Aberto")
@@ -1044,14 +1064,14 @@ class servicosWindow(QMainWindow):
         self.addToolBar(toolbar)
 
         self.bt_Gerar_nova_os = QAction('Gerar nova ordem de serviço')
-        self.bt_aprovar_os = QAction('Aprovar ordem de serviço')
-        self.bt_cancelar_os = QAction('Cancelar ordem de serviço')
+        self.bt_alt_os = QAction('Alterar ordem de serviço')
+        self.bt_del_os = QAction('Deletar ordem de serviço')
 
         self.bt_Gerar_nova_os.triggered.connect(self.show_cadastroProduto)
 
         toolbar.addAction(self.bt_Gerar_nova_os)
-        toolbar.addAction(self.bt_aprovar_os)
-        toolbar.addAction(self.bt_cancelar_os)
+        toolbar.addAction(self.bt_alt_os)
+        toolbar.addAction(self.bt_del_os)
 
         self.tb_servicos = QTableWidget()
         self.tb_servicos.setColumnCount(5)
@@ -1071,15 +1091,6 @@ class servicosWindow(QMainWindow):
             self.w_cadastroServicoWindow.hide()
         else:
             self.w_cadastroServicoWindow.show()
-    
-    def buscar_pedido(self):
-        result = self.db.select_all_pedidos()
-        self.tb_servicos.clearContents()
-        self.tb_servicos.setRowCount(len(result))
-
-        for row, text in enumerate(result):
-            for column, data in enumerate(text):
-                self.tb_servicos.setItem(row, column, QTableWidgetItem(str(data)))
      
 class cadastroServicoWindow(QMainWindow):
     numero_pedido = 1000  # Número inicial do pedido
@@ -1312,8 +1323,7 @@ db = Data_base()
 db.create_table_clientes()
 db.create_table_produtos()
 db.create_table_veiculos()
-db.create_table_os_aberta()
-db.create_table_os_fechadas()
+# db.create_table_pedidos()
 w = MainWindow()
 w.show()
 app.exec()

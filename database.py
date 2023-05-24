@@ -225,7 +225,8 @@ class Data_base:
 
     # Função para registar as ordens de serviços criadas    
     def registro_pedido(self, fullDataSet):
-
+        print('chegou aqui em registro')
+        print(fullDataSet)
         self.connect()
         campos_tabela = ('pedido', 'nome', 'cpf', 'placa','marca','modelo', 'valor')
         qntd = ("?,?,?,?,?,?,?")
@@ -296,7 +297,6 @@ class Data_base:
             print(e)
         finally:
             self.close_connection()
-
 
     #Função deletar clientes
     def delete_clientes(self, cpf):
