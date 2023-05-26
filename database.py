@@ -23,8 +23,6 @@ class Data_base:
         self.connect()
         cursor = self.connection.cursor()
         cursor.execute("""
-        
-
                         CREATE TABLE IF NOT EXISTS Clientes(
 
        NOME TEXT,
@@ -37,7 +35,7 @@ class Data_base:
        BAIRRO TEXT,
        CIDADE, TEXT,
 
-       PRIMARY KEY (PEDIDO)
+       PRIMARY KEY (CPF)
        );
 
                             """)
@@ -225,10 +223,10 @@ class Data_base:
 
     # Função para registar as ordens de serviços criadas    
     def registro_pedido(self, fullDataSet):
-        print('chegou aqui em registro')
+    
         print(fullDataSet)
         self.connect()
-        campos_tabela = ('pedido', 'nome', 'cpf', 'placa','marca','modelo', 'valor')
+        campos_tabela = ('pedido', 'nome', 'cpf', 'placa', 'marca', 'modelo', 'valor')
         qntd = ("?,?,?,?,?,?,?")
         cursor = self.connection.cursor()
 
@@ -272,7 +270,7 @@ class Data_base:
         finally:
             self.close_connection()
 
-#Função selecionar Veiculos
+    #Função selecionar Veiculos
     def select_all_veiculos(self):
         try:
             self.connect()
@@ -285,7 +283,7 @@ class Data_base:
         finally:
             self.close_connection()
 
-#Função selecionar pedidos
+    #Função selecionar pedidos
     def select_all_pedidos(self):
         try:
             self.connect()
@@ -383,7 +381,7 @@ class Data_base:
         finally:
             self.close_connection()
 
-      #Função para atualizar dados dos registro da tabela veiculos
+    #Função para atualizar dados dos registro da tabela veiculos
 
     def update_veiculos(self, placa, cpf, marca, modelo, cor, ano):
         self.connect()

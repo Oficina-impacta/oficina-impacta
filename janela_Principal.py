@@ -878,86 +878,6 @@ class veiculoWindow(QMainWindow):
             QMessageBox.warning(self, 'Erro', result[1])
             print(result[1])
 
-class PedidoWindow(QDialog):
-    def __init__(self, numero_pedido, produtos_selecionados, veiculos_selecionados, tabela):
-        super().__init__()
-
-        self.db = Data_base()
-
-        self.setWindowTitle("Nova Janela de Pedido")
-        layout = QVBoxLayout()
-
-        self.btn_confirmar_pedido = QPushButton('Confirmar pedido')
-        layout.addWidget(self.btn_confirmar_pedido)
-
-        self.btn_confirmar_pedido.clicked.connect(self.cadastrar_pedido_bd)
-
-        lbl_numero_pedido = QLabel(f'Número do pedido: {numero_pedido}')
-        font = QFont("Arial", 18)
-        lbl_numero_pedido.setFont(font)
-        color = QColor(255, 0, 0)
-        lbl_numero_pedido.setStyleSheet(f"color: {color.name()}")
-        layout.addWidget(lbl_numero_pedido)
-
-        table3 = QTableWidget()
-        table3.setColumnCount(4)
-        table3.setHorizontalHeaderLabels(['COD', 'SERVIÇO', 'TIPO', 'PRECO'])
-        table3.setEditTriggers(QAbstractItemView.NoEditTriggers)
-
-        for i, produto in enumerate(produtos_selecionados):
-            table3.insertRow(i)
-            for j, data in enumerate(produto):
-                item = QTableWidgetItem(str(data))
-                table3.setItem(i, j, item)
-
-        table2 = QTableWidget()
-        table2.setColumnCount(4)
-        table2.setHorizontalHeaderLabels(['PLACA', 'MARCA', 'MODELO', 'COR VEICULO'])
-        table2.setEditTriggers(QAbstractItemView.NoEditTriggers)
-
-        for i, veiculo in enumerate(veiculos_selecionados):
-            table2.insertRow(i)
-            for j, data in enumerate(veiculo):
-                item = QTableWidgetItem(str(data))
-                table2.setItem(i, j, item)
-
-        layout.addWidget(tabela)
-        layout.addWidget(table2)
-        layout.addWidget(table3)
-
-        total_label = QLabel("Valor total do pedido: ")
-        font = QFont("Arial", 14)
-        total_label.setFont(font)
-        total_value = sum(float(re.sub('[^\d.]', '', produto[3].replace(',', '.'))) for produto in produtos_selecionados)
-        total_label.setText(total_label.text() + f'R$ {total_value:.2f}')
-
-        layout.addWidget(total_label)
-        self.setLayout(layout)
-        self.setFixedSize(435, 400)
-
-    def cadastrar_pedido_bd(self):
-        
-        fullDataSet = (
-            self.txt_nome.text(), self.txt_cpf.text(), self.txt_telefone.text(), self.txt_inf_cep.text(), self.txt_logradouro.text(),
-            self.txt_numero_res.text(), self.txt_complemento.text(), self.txt_bairro.text(),
-            self.txt_cidade.text(),
-        )
-
-        resp = self.db.registro_pedido(fullDataSet)
-        self.msg(resp[0], resp[1])
-
-    def msg(self, tipo, mensage):
-        msgbox = QMessageBox()
-        if tipo.lower() == 'ok':
-            msgbox.setIcon(QMessageBox.Information)
-        elif tipo.lower() == 'ERRO':
-            msgbox.setIcon(QMessageBox.Critical)
-        elif tipo.lower() == 'aviso':
-            msgbox.setIcon(QMessageBox.Warning)
-        
-        msgbox.setText(mensage)
-        msgbox.exec()
-
 class cadastroVeiculoWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -1075,7 +995,11 @@ class servicosWindow(QMainWindow):
 
         self.tb_servicos = QTableWidget()
         self.tb_servicos.setColumnCount(5)
-        self.tb_servicos.setHorizontalHeaderLabels(['OS', 'Placa', 'Marca', 'Modelo', 'Cliente'])        
+        self.tb_servicos.setHorizontalHeaderLabels(['OS', 'Placa', 'Marca', 'Modelo', 'Cliente'])
+        self.tb_servicos.setEditTriggers(QAbstractItemView.NoEditTriggers)        
+
+        self.db = Data_base()
+        self.buscar_pedidos()
 
         layout = QVBoxLayout()
         layout.addWidget(self.tb_servicos)
@@ -1091,6 +1015,15 @@ class servicosWindow(QMainWindow):
             self.w_cadastroServicoWindow.hide()
         else:
             self.w_cadastroServicoWindow.show()
+
+    def buscar_pedidos(self):
+        result = self.db.select_all_pedidos()
+        self.tb_servicos.clearContents()
+        self.tb_servicos.setRowCount(len(result)+1)
+
+        for row, text in enumerate(result):
+            for column, data in enumerate(text):
+                self.tb_servicos.setItem(row, column, QTableWidgetItem(str(data)))  
      
 class cadastroServicoWindow(QMainWindow):
     numero_pedido = 1000  # Número inicial do pedido
@@ -1169,6 +1102,8 @@ class cadastroServicoWindow(QMainWindow):
         self.setCentralWidget(container)
         self.setFixedSize(QSize(720, 720))
 
+
+
     def abrir_janela_pedido(self):      
         self.db = Data_base()
         # Lógica para gerar o número do pedido
@@ -1205,7 +1140,8 @@ class cadastroServicoWindow(QMainWindow):
 
             # Chamada à função do arquivo database.py para obter os dados do cliente
             cliente_correspondente = self.db.obter_dados_cliente_por_cpf_veiculo(cpf_veiculo_selecionado)
-            print("CPF do veículo selecionado:", cpf_veiculo_selecionado)
+            # print("CPF do veículo selecionado:", cpf_veiculo_selecionado)
+            
 
 
             if cliente_correspondente:
@@ -1228,10 +1164,15 @@ class cadastroServicoWindow(QMainWindow):
                 self.table1.setItem(0, 2, telefone_item)   # Telefone
                 self.table1.setItem(0, 3, cep_item)        # CEP
 
+                    
 
                 # Passa a tabela table1 como um único elemento em uma lista para a classe PedidoWindow
                 nova_janela_pedido = PedidoWindow(self.numero_pedido, produtos_selecionados, veiculos_selecionados, self.table1)
-                nova_janela_pedido.exec_()
+                if nova_janela_pedido.exec() == QDialog.Accepted:
+                    if nova_janela_pedido.fullDataSet:
+                        resultado, mensagem = self.db.registro_pedido(nova_janela_pedido.fullDataSet)
+                        print(resultado, mensagem)
+    
 
 
     def closeEvent(self, event):
@@ -1317,13 +1258,112 @@ class cadastroServicoWindow(QMainWindow):
                   self.tb_veiculos.setCellWidget(row, 6, checkbox)
               return 'cpf' # retorna 'cpf' para indicar que a busca foi bem sucedida
 
+class PedidoWindow(QDialog):
+    def __init__(self, numero_pedido, produtos_selecionados, veiculos_selecionados, tabela):
+        super().__init__()
+
+        self.numero_pedido = numero_pedido
+
+
+        self.setWindowTitle("Nova Janela de Pedido")
+        layout = QVBoxLayout()
+
+
+
+        # Botão confirmar pedido
+        self.btn_confirmar_pedido = QPushButton('Confirmar pedido')
+        layout.addWidget(self.btn_confirmar_pedido)
+
+        self.btn_confirmar_pedido.clicked.connect(self.salvar_dados_pedido)
+
+
+        self.lbl_numero_pedido = QLabel(f'Número do pedido: {numero_pedido}')
+        font = QFont("Arial", 18)
+        self.lbl_numero_pedido.setFont(font)
+        color = QColor(255, 0, 0)
+        self.lbl_numero_pedido.setStyleSheet(f"color: {color.name()}")
+        layout.addWidget(self.lbl_numero_pedido)
+
+        self.table1 = tabela  # Armazenar a tabela como um atributo da classe       
+        layout.addWidget(self.table1)
+        
+
+
+        table3 = QTableWidget()
+        table3.setColumnCount(4)
+        table3.setHorizontalHeaderLabels(['COD', 'SERVIÇO', 'TIPO', 'PRECO'])
+        table3.setEditTriggers(QAbstractItemView.NoEditTriggers)
+
+        for i, produto in enumerate(produtos_selecionados):
+            table3.insertRow(i)
+            for j, data in enumerate(produto):
+                item = QTableWidgetItem(str(data))
+                table3.setItem(i, j, item)
+
+
+        self.table2 = QTableWidget()
+        self.table2.setColumnCount(4)
+        self.table2.setHorizontalHeaderLabels(['PLACA', 'MARCA', 'MODELO', 'COR VEICULO'])
+        self.table2.setEditTriggers(QAbstractItemView.NoEditTriggers)
+
+        for i, veiculo in enumerate(veiculos_selecionados):
+            self.table2.insertRow(i)
+            # Ajuste a ordem dos campos do veículo na lista veiculo
+            placa = veiculo[0]
+            marca = veiculo[2]
+            modelo = veiculo[3]
+            cor_veiculo = veiculo[4]
+        
+            item_placa = QTableWidgetItem(placa)
+            item_marca = QTableWidgetItem(marca)
+            item_modelo = QTableWidgetItem(modelo)
+            item_cor_veiculo = QTableWidgetItem(cor_veiculo)
+        
+            self.table2.setItem(i, 0, item_placa)  # Coluna 1 - PLACA
+            self.table2.setItem(i, 1, item_marca)  # Coluna 1 - MARCA
+            self.table2.setItem(i, 2, item_modelo)  # Coluna 2 - MODELO
+            self.table2.setItem(i, 3, item_cor_veiculo)  # Coluna 3 - COR VEICULO
+
+
+        layout.addWidget(tabela)
+        layout.addWidget(self.table2)
+        layout.addWidget(table3)
+
+        self.total_label = QLabel("Valor total do pedido: ")
+        font = QFont("Arial", 14)
+        self.total_label.setFont(font)
+        total_value = sum(float(re.sub('[^\d.]', '', produto[3].replace(',', '.'))) for produto in produtos_selecionados)
+        self.total_label.setText(self.total_label.text() + f'R$ {total_value:.2f}')
+
+        layout.addWidget(self.total_label)
+        self.setLayout(layout)
+        self.setFixedSize(435, 400)
+
+    def salvar_dados_pedido(self):
+        # Obtém os dados da tabela1
+        nome = self.table1.item(0, 0).text()
+        cpf = self.table1.item(0, 1).text()
+        placa = self.table2.item(0, 0).text()
+        marca = self.table2.item(0, 1).text()
+        modelo = self.table2.item(0, 2).text()
+        valor = self.total_label.text()
+
+
+
+        # Define o valor do atributo fullDataSet com os dados relevantes
+        self.fullDataSet = (self.numero_pedido, nome, cpf, placa, marca, modelo, valor)
+
+        # Aqui você pode chamar a função registro_pedido passando o fullDataSet como argumento
+        # Fechar a janela após salvar os dados
+        self.accept()
+        
 app = QApplication(sys.argv)
 app.setStyle('Fusion')
 db = Data_base()
 db.create_table_clientes()
 db.create_table_produtos()
 db.create_table_veiculos()
-# db.create_table_pedidos()
+db.create_table_os_aberta()
 w = MainWindow()
 w.show()
 app.exec()
