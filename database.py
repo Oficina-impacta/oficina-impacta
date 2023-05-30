@@ -287,14 +287,24 @@ class Data_base:
     def select_all_pedidos(self):
         try:
             self.connect()
+            print("Conexão estabelecida com sucesso")
+
             cursor = self.connection.cursor()
-            cursor.execute("SELECT * FROM OsAberta ORDER BY PEDIDO")
-            pedidos = cursor.fetchall()
-            return pedidos
+            cursor.execute("SELECT * FROM OsAbertas ORDER BY PEDIDO")
+            OsAbertas = cursor.fetchall()
+
+            print("Consulta executada com sucesso")
+            print("Resultados encontrados:")
+            for row in OsAbertas:
+                print(row)
+
+            return OsAbertas
         except Exception as e:
+            print("Ocorreu um erro durante a execução da consulta:")
             print(e)
         finally:
             self.close_connection()
+            print("Conexão fechada")
 
     #Função deletar clientes
     def delete_clientes(self, cpf):
