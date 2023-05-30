@@ -999,7 +999,7 @@ class servicosWindow(QMainWindow):
         self.tb_servicos.setEditTriggers(QAbstractItemView.NoEditTriggers)        
 
         self.db = Data_base()
-        self.buscar_pedidos()
+        # self.buscar_pedidos()
 
         layout = QVBoxLayout()
         layout.addWidget(self.tb_servicos)
@@ -1016,14 +1016,14 @@ class servicosWindow(QMainWindow):
         else:
             self.w_cadastroServicoWindow.show()
 
-    def buscar_pedidos(self):
-        result = self.db.select_all_pedidos()
-        self.tb_servicos.clearContents()
-        self.tb_servicos.setRowCount(len(result)+1)
+    # def buscar_pedidos(self):
+    #     result = self.db.select_all_pedidos()
+    #     self.tb_servicos.clearContents()
+    #     self.tb_servicos.setRowCount(len(result)+1)
 
-        for row, text in enumerate(result):
-            for column, data in enumerate(text):
-                self.tb_servicos.setItem(row, column, QTableWidgetItem(str(data)))  
+    #     for row, text in enumerate(result):
+    #         for column, data in enumerate(text):
+    #             self.tb_servicos.setItem(row, column, QTableWidgetItem(str(data)))  
      
 class cadastroServicoWindow(QMainWindow):
     numero_pedido = 1000  # Número inicial do pedido
@@ -1339,8 +1339,14 @@ class PedidoWindow(QDialog):
         self.setLayout(layout)
         self.setFixedSize(435, 400)
 
+
+   
+
+
+
     def salvar_dados_pedido(self):
-        # Obtém os dados da tabela1
+        self.db = Data_base()
+        # Obtém os dados do pedido
         nome = self.table1.item(0, 0).text()
         cpf = self.table1.item(0, 1).text()
         placa = self.table2.item(0, 0).text()
@@ -1348,14 +1354,21 @@ class PedidoWindow(QDialog):
         modelo = self.table2.item(0, 2).text()
         valor = self.total_label.text()
 
-
-
         # Define o valor do atributo fullDataSet com os dados relevantes
         self.fullDataSet = (self.numero_pedido, nome, cpf, placa, marca, modelo, valor)
 
-        # Aqui você pode chamar a função registro_pedido passando o fullDataSet como argumento
-        # Fechar a janela após salvar os dados
-        self.accept()
+        # Chama a função registro_pedido passando o fullDataSet como argumento
+        resultado, mensagem = self.db.registro_pedido(self.fullDataSet)
+
+        if resultado == "OK":
+            # Exibe mensagem de sucesso na interface gráfica
+            QMessageBox.information(self, "Sucesso", mensagem)
+            # Fecha a janela após salvar os dados
+            self.accept()
+        else:
+            # Exibe mensagem de erro na interface gráfica
+            QMessageBox.critical(self, "Erro", mensagem)
+
         
 app = QApplication(sys.argv)
 app.setStyle('Fusion')
