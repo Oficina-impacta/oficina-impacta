@@ -994,10 +994,15 @@ class servicosWindow(QMainWindow):
         toolbar.addAction(self.bt_del_os)
        
         self.tb_servicos = QTableWidget()
-        self.tb_servicos.setColumnCount(5)
-        self.tb_servicos.setHorizontalHeaderLabels(['OS', 'Placa', 'Marca', 'Modelo', 'Cliente'])
+        self.tb_servicos.setColumnCount(7)
+        self.tb_servicos.setHorizontalHeaderLabels(['OS', 'NOME', 'CPF', 'PLACA', 'MARCA','MODELO', 'VALOR'])
         self.tb_servicos.setEditTriggers(QAbstractItemView.NoEditTriggers)        
 
+        #setar a largaura da coluna
+        self.tb_servicos.setColumnWidth(6, 198)
+        self.tb_servicos.setColumnWidth(0, 50)
+        self.tb_servicos.setColumnWidth(1, 150)
+        
         self.db = Data_base()
         self.buscar_pedidos()
 
@@ -1008,7 +1013,7 @@ class servicosWindow(QMainWindow):
         container.setLayout(layout)
 
         self.setCentralWidget(container)
-        self.setFixedSize(QSize(520,600))
+        self.setFixedSize(QSize(850,600))
 
     def show_cadastroProduto(self):
         if  self.w_cadastroServicoWindow.isVisible():
@@ -1023,10 +1028,10 @@ class servicosWindow(QMainWindow):
             self.tb_servicos.setRowCount(0)
             QMessageBox.information(self, "Sem resultados", "Não há pedidos encontrados.")
             return
-    
+
         self.tb_servicos.clearContents()
         self.tb_servicos.setRowCount(len(result))
-    
+
         for row, text in enumerate(result):
             for column, data in enumerate(text):
                 self.tb_servicos.setItem(row, column, QTableWidgetItem(str(data)))
