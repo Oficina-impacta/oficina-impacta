@@ -6,7 +6,7 @@ import sqlite3
 # FUNÇÃO CRIANDO BANCO DE DADOS
 class Data_base:
 
-    def __init__(self, name= 'system.db') -> None:
+    def __init__(self, name= 'system.dba') -> None:
         self.name = name
 
     def connect(self):
@@ -23,7 +23,7 @@ class Data_base:
         self.connect()
         cursor = self.connection.cursor()
         cursor.execute("""
-                        CREATE TABLE IF NOT EXISTS Clientes(
+                        CREATE TABLE IF NOT EXISTS Clientes (
 
        NOME TEXT,
        CPF TEXT,
@@ -448,3 +448,46 @@ class Data_base:
            print(e)
        finally:
            self.close_connection()
+
+    # função para mover o pedido da tabela Osabertas para OSfechadas e efetuar o delete da tabela inicial
+    def mover_pedido_fechadas(self, pedido_data):
+        try:
+            self.connect()
+            cursor = self.connection.cursor()
+
+            # Extrai os dados do pedido
+            pedido = pedido_data[0]
+            nome = pedido_data[1]
+            cpf = pedido_data[2]
+            placa = pedido_data[3]
+            marca = pedido_data[4]
+            modelo = pedido_data[5]
+            valor = pedido_data[6]
+
+            # Insere os dados do pedido na tabela de pedidos fechados
+            cursor.execute("INSERT INTO OsFechadas (PEDIDO, NOME, CPF, PLACA, MARCA, MODELO, VALOR) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                           (pedido, nome, cpf, placa, marca, modelo, valor))
+            self.connection.commit()
+
+            # Remove o pedido da tabela de pedidos em aberto
+            cursor.execute("DELETE FROM OsAbertas WHERE PEDIDO=?", (pedido,))
+            self.connection.commit()
+
+            return "OK", "Pedido Faturado com Sucesso."
+        except Exception as e:
+            return "Erro", f"Erro ao mover o pedido para a tabela de pedidos fechados: {str(e)}"
+        finally:
+            self.close_connection()
+
+
+    def selecionar_pedido(self, pedido):
+        try:
+            self.connect()
+            cursor = self.connection.cursor()
+            cursor.execute("SELECT * FROM OsAbertas WHERE PEDIDO=?", (pedido,))
+            pedido_data = cursor.fetchone()
+            return pedido_data
+        except Exception as e:
+            print(e)
+        finally:
+            self.close_connection()

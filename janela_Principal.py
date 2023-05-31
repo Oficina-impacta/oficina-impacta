@@ -984,13 +984,14 @@ class servicosWindow(QMainWindow):
         self.addToolBar(toolbar)
 
         self.bt_Gerar_nova_os = QAction('Gerar nova ordem de serviço')
-        self.bt_alt_os = QAction('Alterar ordem de serviço')
+        self.bt_fat_os = QAction('Faturar Pedido')
         self.bt_del_os = QAction('Deletar ordem de serviço')
 
         self.bt_Gerar_nova_os.triggered.connect(self.show_cadastroProduto)
+        self.bt_fat_os.triggered.connect(self.faturar_pedido)
 
         toolbar.addAction(self.bt_Gerar_nova_os)
-        toolbar.addAction(self.bt_alt_os)
+        toolbar.addAction(self.bt_fat_os)
         toolbar.addAction(self.bt_del_os)
        
         self.tb_servicos = QTableWidget()
@@ -1035,6 +1036,50 @@ class servicosWindow(QMainWindow):
         for row, text in enumerate(result):
             for column, data in enumerate(text):
                 self.tb_servicos.setItem(row, column, QTableWidgetItem(str(data)))
+    
+    #função para faturar o pedido e mover para a tabela OSfechadas
+    def faturar_pedido(self):
+        # Verifica se há um pedido selecionado na tabela de pedidos em aberto
+        selected_items = self.tb_servicos.selectedItems()
+        if not selected_items:
+            QMessageBox.warning(self, "Pedido não selecionado", "Selecione um pedido para faturar.")
+            return
+
+        # Obtém os índices de linha exclusivos dos itens selecionados
+        selected_rows = set()
+        for item in selected_items:
+            selected_rows.add(item.row())
+
+        # Verifica se apenas uma linha foi selecionada
+        if len(selected_rows) != 1:
+            QMessageBox.warning(self, "Seleção inválida", "Selecione apenas um pedido para faturar.")
+            return
+
+        # Obtém o número do pedido selecionado
+        row = selected_rows.pop()
+        pedido_item = self.tb_servicos.item(row, 0)
+        if pedido_item is None:
+            QMessageBox.warning(self, "Pedido não encontrado", "O pedido selecionado não existe.")
+            return
+
+        pedido = pedido_item.text()
+
+        # Obtém os dados do pedido a partir do número
+        pedido_data = self.db.selecionar_pedido(pedido)
+        if pedido_data is None:
+            QMessageBox.warning(self, "Pedido não encontrado", "O pedido selecionado não existe.")
+            return
+
+        # Move o pedido para a tabela de pedidos fechados
+        resultado, mensagem = self.db.mover_pedido_fechadas(pedido_data)
+        if resultado == "OK":
+            # Atualiza a tabela de pedidos em aberto
+            self.buscar_pedidos()
+            QMessageBox.information(self, "Pedido faturado", mensagem)
+        else:
+            QMessageBox.critical(self, "Erro", mensagem)
+
+
      
 class cadastroServicoWindow(QMainWindow):
     numero_pedido = 1000  # Número inicial do pedido
@@ -1352,9 +1397,6 @@ class PedidoWindow(QDialog):
 
 
    
-
-
-
     def salvar_dados_pedido(self):
         self.db = Data_base()
         # Obtém os dados do pedido
@@ -1371,8 +1413,8 @@ class PedidoWindow(QDialog):
         # Chama a função registro_pedido passando o fullDataSet como argumento
         resultado, mensagem = self.db.registro_pedido(self.fullDataSet)
 
-        if resultado == "OK":
-            # Exibe mensagem de sucesso na interface gráfica
+        if resultado == "OK":            
+            # Exibe mensagem de sucesso na interface gráfica            
             QMessageBox.information(self, "Sucesso", mensagem)
             # Fecha a janela após salvar os dados
             self.accept()
@@ -1388,6 +1430,7 @@ db.create_table_clientes()
 db.create_table_produtos()
 db.create_table_veiculos()
 db.create_table_os_aberta()
+db.create_table_os_fechadas()
 w = MainWindow()
 w.show()
 app.exec()
