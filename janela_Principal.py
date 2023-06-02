@@ -1,14 +1,14 @@
 import sys
 from PySide6.QtGui import QAction, QPixmap, QFont, QColor
 from PySide6.QtCore import QSize, Qt
-from PySide6 import QtCore
 from PySide6.QtWidgets import *
 from database import Data_base
-# import pandas as pd
 import pycep_correios
 from PySide6.QtWidgets import QTableWidget, QTableWidgetItem, QCheckBox
 import re
 from PySide6.QtWidgets import QAbstractItemView, QTableWidget, QTableWidgetItem
+from PySide6.QtCore import Signal
+
 
 class LoginWindow(QDialog):
     def __init__(self):
@@ -72,6 +72,7 @@ class MainWindow(QMainWindow):
         self.w_veiculo = veiculoWindow()
         self.w_cadastro_veiculo = cadastroVeiculoWindow()
         self.w_servico = servicosWindow()
+        self.w_historico = HistoricoWindow()
         
         self.setWindowTitle("Oficina Impacta")
         self.lbl = QLabel()
@@ -128,6 +129,7 @@ class MainWindow(QMainWindow):
         self.button_cadastrar_veiculos.triggered.connect(self.show_cadastro_veiculo)
 
         self.button_servico_aberto.triggered.connect(self.show_servicosWindow)
+        self.button_historico_vendas.triggered.connect(self.show_historicoWindow)
         
 
         layout = QVBoxLayout()
@@ -139,6 +141,8 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(container)
         self.setFixedSize(QSize(1000,800))
 
+
+  
     def show_clienteWindow(self):
         if  self.w_cliente.isVisible():
             self.w_cliente.hide()
@@ -179,7 +183,13 @@ class MainWindow(QMainWindow):
         if  self.w_servico.isVisible():
             self.w_servico.hide()
         else:
-            self.w_servico.show()       
+            self.w_servico.show() 
+
+    def show_historicoWindow(self):
+        if  self.w_historico.isVisible():
+            self.w_historico.hide()
+        else:
+            self.w_historico.show()       
 
 class clienteWindow(QMainWindow):
     def __init__(self):
@@ -1016,6 +1026,25 @@ class servicosWindow(QMainWindow):
         self.setCentralWidget(container)
         self.setFixedSize(QSize(850,600))
 
+    def atualizar_tabela_servicos(self):
+        # Limpar a tabela antes de carregar os novos registros
+        self.tb_servicos.clearContents()
+
+        # Obter os registros de serviços em aberto do banco de dados
+        registros_servicos = self.db.obter_servicos_em_aberto()
+
+        # Preencher a tabela com os registros
+        self.tb_servicos.setRowCount(len(registros_servicos))
+        for row, servico in enumerate(registros_servicos):
+            self.tb_servicos.setItem(row, 0, QTableWidgetItem(servico[0]))  # Número OS
+            self.tb_servicos.setItem(row, 1, QTableWidgetItem(servico[1]))  # Nome
+            self.tb_servicos.setItem(row, 2, QTableWidgetItem(servico[2]))  # CPF
+            self.tb_servicos.setItem(row, 3, QTableWidgetItem(servico[3]))  # Placa
+            self.tb_servicos.setItem(row, 4, QTableWidgetItem(servico[4]))  # Marca
+            self.tb_servicos.setItem(row, 5, QTableWidgetItem(servico[5]))  # Modelo
+            self.tb_servicos.setItem(row, 6, QTableWidgetItem(servico[6]))  # Valor
+
+
     def show_cadastroProduto(self):
         if  self.w_cadastroServicoWindow.isVisible():
             self.w_cadastroServicoWindow.hide()
@@ -1039,6 +1068,7 @@ class servicosWindow(QMainWindow):
     
     #função para faturar o pedido e mover para a tabela OSfechadas
     def faturar_pedido(self):
+        self.db = Data_base()
         # Verifica se há um pedido selecionado na tabela de pedidos em aberto
         selected_items = self.tb_servicos.selectedItems()
         if not selected_items:
@@ -1078,11 +1108,9 @@ class servicosWindow(QMainWindow):
             QMessageBox.information(self, "Pedido faturado", mensagem)
         else:
             QMessageBox.critical(self, "Erro", mensagem)
-
-
-     
+    
 class cadastroServicoWindow(QMainWindow):
-    numero_pedido = 1000  # Número inicial do pedido
+    
     def __init__(self):
         super().__init__()
 
@@ -1103,7 +1131,7 @@ class cadastroServicoWindow(QMainWindow):
         self.bt_gerar_pedido.setStatusTip('Gerar pedido')
         self.bt_gerar_pedido.triggered.connect(self.abrir_janela_pedido)
 
-
+             
         toolbar.addAction(self.bt_buscar)
         toolbar.addAction(self.bt_gerar_pedido)
 
@@ -1158,11 +1186,13 @@ class cadastroServicoWindow(QMainWindow):
         self.setCentralWidget(container)
         self.setFixedSize(QSize(720, 720))
 
-
+      
 
     def abrir_janela_pedido(self):      
         self.db = Data_base()
+
         # Lógica para gerar o número do pedido
+        self.numero_pedido = db.numero_pedido()
         self.numero_pedido += 1
 
         produtos_selecionados = []
@@ -1232,6 +1262,8 @@ class cadastroServicoWindow(QMainWindow):
 
 
     def closeEvent(self, event):
+            self.resetar_tela()
+            super().closeEvent(event)
             # limpa os dados da janela
             self.tb_veiculos.clearContents()
             self.tb_produtos.clearContents()
@@ -1240,6 +1272,45 @@ class cadastroServicoWindow(QMainWindow):
 
             # chama o método closeEvent original da classe QMainWindow
             super().closeEvent(event)      
+
+    def resetar_tela(self):
+        # Limpando as tabelas
+        self.tb_veiculos.clearContents()
+        self.tb_produtos.clearContents()
+
+        # Removendo linhas vazias da tabela tb_veiculos
+        rows_to_remove_veiculos = []
+        for row in range(self.tb_veiculos.rowCount()):
+            empty = True
+            for column in range(self.tb_veiculos.columnCount()):
+                item = self.tb_veiculos.item(row, column)
+                if item and item.text():
+                    empty = False
+                    break
+            if empty:
+                rows_to_remove_veiculos.append(row)
+
+        for row in reversed(rows_to_remove_veiculos):
+            self.tb_veiculos.removeRow(row)
+
+        # Removendo linhas vazias da tabela tb_produtos
+        rows_to_remove_produtos = []
+        for row in range(self.tb_produtos.rowCount()):
+            empty = True
+            for column in range(self.tb_produtos.columnCount()):
+                item = self.tb_produtos.item(row, column)
+                if item and item.text():
+                    empty = False
+                    break
+            if empty:
+                rows_to_remove_produtos.append(row)
+
+        for row in reversed(rows_to_remove_produtos):
+            self.tb_produtos.removeRow(row)
+
+        # Limpando os campos de texto
+        self.txt_cpf.clear()
+        self.txt_placa.clear()
 
     
    # chama a função buscar_produtos() para preencher a tabela na interface gráfica
@@ -1315,15 +1386,15 @@ class cadastroServicoWindow(QMainWindow):
               return 'cpf' # retorna 'cpf' para indicar que a busca foi bem sucedida
 
 class PedidoWindow(QDialog):
+    dados_pedido_gravados = Signal()
+    
     def __init__(self, numero_pedido, produtos_selecionados, veiculos_selecionados, tabela):
         super().__init__()
 
         self.numero_pedido = numero_pedido
 
-
         self.setWindowTitle("Nova Janela de Pedido")
         layout = QVBoxLayout()
-
 
 
         # Botão confirmar pedido
@@ -1416,13 +1487,67 @@ class PedidoWindow(QDialog):
         if resultado == "OK":            
             # Exibe mensagem de sucesso na interface gráfica            
             QMessageBox.information(self, "Sucesso", mensagem)
+            # Emite o sinal informando que os dados do pedido foram gravados
+            self.dados_pedido_gravados.emit()
             # Fecha a janela após salvar os dados
             self.accept()
         else:
             # Exibe mensagem de erro na interface gráfica
             QMessageBox.critical(self, "Erro", mensagem)
 
+class HistoricoWindow(QMainWindow):
+
+    def __init__(self):
+        super().__init__()
+
+        self.setWindowTitle("Historico de serviços")   
+
+        #Definição da quantidade de campos que devem aparecer na interface grafica
+        self.tb_servicos = QTableWidget()
+        self.tb_servicos.setColumnCount(7)
+        self.tb_servicos.setHorizontalHeaderLabels(['OS', 'NOME', 'CPF', 'PLACA', 'MARCA','MODELO', 'VALOR'])
+        self.tb_servicos.setEditTriggers(QAbstractItemView.NoEditTriggers)  
+
+        #setar a largaura da coluna
+        self.tb_servicos.setColumnWidth(6, 198)
+        self.tb_servicos.setColumnWidth(0, 50)
+        self.tb_servicos.setColumnWidth(1, 150)
+
+        self.db = Data_base()
+        self.buscar_pedidos()
+
+        layout = QVBoxLayout()
+        layout.addWidget(self.tb_servicos)
         
+        container = QWidget()
+        container.setLayout(layout)
+
+
+        self.setCentralWidget(container)
+        self.setFixedSize(QSize(850,600))
+
+        # Evento chamar a função
+        self.showEvent = self.on_show_event
+
+    def on_show_event(self, event):
+        # Chamada à função buscar_pedidos ao exibir a janela
+        self.buscar_pedidos()
+        event.accept()
+
+    def buscar_pedidos(self):
+         registros = self.db.obter_registros_os_fechadas()  # Obtenha os registros da tabela OsFechadas
+
+         # Limpar a tabela existente
+         self.tb_servicos.setRowCount(0)
+
+         # Adicionar os registros na tabela
+         for row, registro in enumerate(registros):
+             self.tb_servicos.insertRow(row)
+             for col, valor in enumerate(registro):
+                 item = QTableWidgetItem(str(valor))
+                 self.tb_servicos.setItem(row, col, item)
+
+   
 app = QApplication(sys.argv)
 app.setStyle('Fusion')
 db = Data_base()

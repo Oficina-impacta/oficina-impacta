@@ -6,7 +6,7 @@ import sqlite3
 # FUNÇÃO CRIANDO BANCO DE DADOS
 class Data_base:
 
-    def __init__(self, name= 'system.dba') -> None:
+    def __init__(self, name= 'system.db') -> None:
         self.name = name
 
     def connect(self):
@@ -23,7 +23,7 @@ class Data_base:
         self.connect()
         cursor = self.connection.cursor()
         cursor.execute("""
-                        CREATE TABLE IF NOT EXISTS Clientes (
+                        CREATE TABLE IF NOT EXISTS Clientes(
 
        NOME TEXT,
        CPF TEXT,
@@ -287,24 +287,46 @@ class Data_base:
     def select_all_pedidos(self):
         try:
             self.connect()
-            print("Conexão estabelecida com sucesso")
-
+            # print("Conexão estabelecida com sucesso")
+            
             cursor = self.connection.cursor()
             cursor.execute("SELECT * FROM OsAbertas ORDER BY PEDIDO")
-            OsAbertas = cursor.fetchall()
-
-            print("Consulta executada com sucesso")
-            print("Resultados encontrados:")
-            for row in OsAbertas:
+            OsAberta = cursor.fetchall()
+            
+            # print("Consulta executada com sucesso")
+            # print("Resultados encontrados:")
+            for row in OsAberta:
                 print(row)
-
-            return OsAbertas
+            
+            return OsAberta
         except Exception as e:
             print("Ocorreu um erro durante a execução da consulta:")
             print(e)
         finally:
             self.close_connection()
-            print("Conexão fechada")
+            # print("Conexão fechada")
+
+    def select_all_historico(self):
+        try:
+            self.connect()
+            # print("Conexão estabelecida com sucesso")
+            
+            cursor = self.connection.cursor()
+            cursor.execute("SELECT * FROM OsFechadas ORDER BY PEDIDO")
+            OsFechada = cursor.fetchall()
+            
+            # print("Consulta executada com sucesso")
+            # print("Resultados encontrados:")
+            for row in OsFechada:
+                print(row)
+            
+            return OsFechada
+        except Exception as e:
+            print("Ocorreu um erro durante a execução da consulta:")
+            print(e)
+        finally:
+            self.close_connection()
+            # print("Conexão fechada")
 
     #Função deletar clientes
     def delete_clientes(self, cpf):
@@ -449,6 +471,7 @@ class Data_base:
        finally:
            self.close_connection()
 
+    
     # função para mover o pedido da tabela Osabertas para OSfechadas e efetuar o delete da tabela inicial
     def mover_pedido_fechadas(self, pedido_data):
         try:
@@ -491,3 +514,51 @@ class Data_base:
             print(e)
         finally:
             self.close_connection()
+
+
+    def numero_pedido(self):
+    
+            self.connect()
+            cursor = self.connection.cursor()
+            cursor.execute('select count(*) from OsAbertas')
+            tabela_aberta = cursor.fetchall()
+            cursor.execute('select count(*) from OsFechadas')
+            tabela_fechada = cursor.fetchall()
+            numero_pedido = sum(tabela_aberta[0] + tabela_fechada[0])
+            return (numero_pedido)
+
+
+    def obter_registros_os_fechadas(self):
+      try:
+          self.connect()
+          cursor = self.connection.cursor()
+
+          # Execute a consulta SQL para obter os registros da tabela OsFechadas
+          cursor.execute("SELECT * FROM OsFechadas")
+          registros = cursor.fetchall()
+
+          return registros
+      except Exception as e:
+          # Lide com erros de consulta ou conexão com o banco de dados
+          return None
+      finally:
+          self.close_connection()
+
+         
+
+    def obter_servicos_em_aberto(self):
+      try:
+          self.connect()
+          cursor = self.connection.cursor()
+  
+          # Execute a consulta SQL para obter os registros da tabela OsAbertas
+          cursor.execute("SELECT * FROM OsAbertas")
+          registros = cursor.fetchall()
+  
+          return registros
+      except Exception as e:
+          # Lide com erros de consulta ou conexão com o banco de dados
+          return None
+      finally:
+          self.close_connection()
+       
