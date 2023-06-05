@@ -1026,23 +1026,23 @@ class servicosWindow(QMainWindow):
         self.setCentralWidget(container)
         self.setFixedSize(QSize(850,600))
 
-    def atualizar_tabela_servicos(self):
-        # Limpar a tabela antes de carregar os novos registros
-        self.tb_servicos.clearContents()
+    # def atualizar_tabela_servicos(self):
+    #     # Limpar a tabela antes de carregar os novos registros
+    #     self.tb_servicos.clearContents()
 
-        # Obter os registros de serviços em aberto do banco de dados
-        registros_servicos = self.db.obter_servicos_em_aberto()
+    #     # Obter os registros de serviços em aberto do banco de dados
+    #     registros_servicos = self.db.obter_servicos_em_aberto()
 
-        # Preencher a tabela com os registros
-        self.tb_servicos.setRowCount(len(registros_servicos))
-        for row, servico in enumerate(registros_servicos):
-            self.tb_servicos.setItem(row, 0, QTableWidgetItem(servico[0]))  # Número OS
-            self.tb_servicos.setItem(row, 1, QTableWidgetItem(servico[1]))  # Nome
-            self.tb_servicos.setItem(row, 2, QTableWidgetItem(servico[2]))  # CPF
-            self.tb_servicos.setItem(row, 3, QTableWidgetItem(servico[3]))  # Placa
-            self.tb_servicos.setItem(row, 4, QTableWidgetItem(servico[4]))  # Marca
-            self.tb_servicos.setItem(row, 5, QTableWidgetItem(servico[5]))  # Modelo
-            self.tb_servicos.setItem(row, 6, QTableWidgetItem(servico[6]))  # Valor
+    #     # Preencher a tabela com os registros
+    #     self.tb_servicos.setRowCount(len(registros_servicos))
+    #     for row, servico in enumerate(registros_servicos):
+    #         self.tb_servicos.setItem(row, 0, QTableWidgetItem(servico[0]))  # Número OS
+    #         self.tb_servicos.setItem(row, 1, QTableWidgetItem(servico[1]))  # Nome
+    #         self.tb_servicos.setItem(row, 2, QTableWidgetItem(servico[2]))  # CPF
+    #         self.tb_servicos.setItem(row, 3, QTableWidgetItem(servico[3]))  # Placa
+    #         self.tb_servicos.setItem(row, 4, QTableWidgetItem(servico[4]))  # Marca
+    #         self.tb_servicos.setItem(row, 5, QTableWidgetItem(servico[5]))  # Modelo
+    #         self.tb_servicos.setItem(row, 6, QTableWidgetItem(servico[6]))  # Valor
 
 
     def show_cadastroProduto(self):
