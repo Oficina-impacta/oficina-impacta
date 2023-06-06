@@ -1,6 +1,6 @@
 import sys
 from PySide6.QtGui import QAction, QPixmap, QFont, QColor
-from PySide6.QtCore import QSize, Qt
+from PySide6.QtCore import QSize, Qt, QTimer
 from PySide6.QtWidgets import *
 from database import Data_base
 import pycep_correios
@@ -1026,24 +1026,6 @@ class servicosWindow(QMainWindow):
         self.setCentralWidget(container)
         self.setFixedSize(QSize(850,600))
 
-    # def atualizar_tabela_servicos(self):
-    #     # Limpar a tabela antes de carregar os novos registros
-    #     self.tb_servicos.clearContents()
-
-    #     # Obter os registros de serviços em aberto do banco de dados
-    #     registros_servicos = self.db.obter_servicos_em_aberto()
-
-    #     # Preencher a tabela com os registros
-    #     self.tb_servicos.setRowCount(len(registros_servicos))
-    #     for row, servico in enumerate(registros_servicos):
-    #         self.tb_servicos.setItem(row, 0, QTableWidgetItem(servico[0]))  # Número OS
-    #         self.tb_servicos.setItem(row, 1, QTableWidgetItem(servico[1]))  # Nome
-    #         self.tb_servicos.setItem(row, 2, QTableWidgetItem(servico[2]))  # CPF
-    #         self.tb_servicos.setItem(row, 3, QTableWidgetItem(servico[3]))  # Placa
-    #         self.tb_servicos.setItem(row, 4, QTableWidgetItem(servico[4]))  # Marca
-    #         self.tb_servicos.setItem(row, 5, QTableWidgetItem(servico[5]))  # Modelo
-    #         self.tb_servicos.setItem(row, 6, QTableWidgetItem(servico[6]))  # Valor
-
 
     def show_cadastroProduto(self):
         if  self.w_cadastroServicoWindow.isVisible():
@@ -1051,6 +1033,34 @@ class servicosWindow(QMainWindow):
         else:
             self.w_cadastroServicoWindow.show()
 
+# Configurar o QTimer para atualizar a tabela a cada X segundos
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.atualizar_tabela_servicos)
+        self.timer.start(5000)  # Atualizar a cada 5 segundos (ajuste o valor conforme necessário)
+
+    def atualizar_tabela_servicos(self):
+        # Limpar a tabela
+        self.tb_servicos.clearContents()
+
+        # Buscar os dados atualizados do banco de dados
+        dados = self.db.select_all_pedidos()
+
+        # Atualizar a tabela com os novos dados
+        self.tb_servicos.setRowCount(len(dados))
+        for row, data in enumerate(dados):
+            for col, item in enumerate(data):
+                self.tb_servicos.setItem(row, col, QTableWidgetItem(str(item)))
+
+    def buscar_pedidos(self):
+        # Buscar os dados iniciais do banco de dados
+        dados = self.db.select_all_pedidos()
+
+        # Preencher a tabela com os dados iniciais
+        self.tb_servicos.setRowCount(len(dados))
+        for row, data in enumerate(dados):
+            for col, item in enumerate(data):
+                self.tb_servicos.setItem(row, col, QTableWidgetItem(str(item)))
+  
     def buscar_pedidos(self):
         result = self.db.select_all_pedidos()
         if result is None:
@@ -1237,7 +1247,7 @@ class cadastroServicoWindow(QMainWindow):
                 self.table1.setHorizontalHeaderLabels(['PROPRIETARIO', 'CPF', 'TELEFONE', 'CEP'])
                 self.table1.setEditTriggers(QAbstractItemView.NoEditTriggers)
                 self.table1.setRowCount(1)
-                print("Dados do cliente correspondente:", cliente_correspondente)
+                # print("Dados do cliente correspondente:", cliente_correspondente)
             
                 # Preenche as células da tabela com os dados do cliente
                 nome_item = QTableWidgetItem(cliente_correspondente[0])
@@ -1387,6 +1397,7 @@ class cadastroServicoWindow(QMainWindow):
 
 class PedidoWindow(QDialog):
     dados_pedido_gravados = Signal()
+
     
     def __init__(self, numero_pedido, produtos_selecionados, veiculos_selecionados, tabela):
         super().__init__()
@@ -1467,7 +1478,7 @@ class PedidoWindow(QDialog):
         self.setFixedSize(435, 400)
 
 
-   
+  
     def salvar_dados_pedido(self):
         self.db = Data_base()
         # Obtém os dados do pedido
@@ -1494,6 +1505,7 @@ class PedidoWindow(QDialog):
         else:
             # Exibe mensagem de erro na interface gráfica
             QMessageBox.critical(self, "Erro", mensagem)
+            self.dados_pedido_gravados.emit()
 
 class HistoricoWindow(QMainWindow):
 
