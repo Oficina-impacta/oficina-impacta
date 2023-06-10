@@ -370,6 +370,19 @@ class Data_base:
         finally:
             self.close_connection()
 
+    def delete_pedido(self, pedido):
+
+        try:
+            self.connect()
+            cursor = self.connection.cursor()
+            cursor.execute(f"DELETE  FROM OsAbertas WHERE PEDIDO = '{pedido}'")
+            self.connection.commit()
+            return 'OK', 'Pedido deletado com sucesso!' 
+        except Exception as e:
+            return 'erro', str(e)
+        finally:
+            self.close_connection()
+
     #Função para atualizar dados dos registro da tabela clientes
     def update_clientes(self, nome, telefone, cep, logradouro, numero, complemento, bairro, cidade, cpf):
         self.connect()
@@ -471,7 +484,6 @@ class Data_base:
        finally:
            self.close_connection()
 
-    
     # função para mover o pedido da tabela Osabertas para OSfechadas e efetuar o delete da tabela inicial
     def mover_pedido_fechadas(self, pedido_data):
         try:
@@ -502,7 +514,6 @@ class Data_base:
         finally:
             self.close_connection()
 
-
     def selecionar_pedido(self, pedido):
         try:
             self.connect()
@@ -515,7 +526,6 @@ class Data_base:
         finally:
             self.close_connection()
 
-
     def numero_pedido(self):
     
             self.connect()
@@ -526,7 +536,6 @@ class Data_base:
             tabela_fechada = cursor.fetchall()
             numero_pedido = sum(tabela_aberta[0] + tabela_fechada[0])
             return (numero_pedido)
-
 
     def obter_registros_os_fechadas(self):
       try:
@@ -543,8 +552,6 @@ class Data_base:
           return None
       finally:
           self.close_connection()
-
-         
 
     def obter_servicos_em_aberto(self):
       try:

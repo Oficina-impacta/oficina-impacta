@@ -999,6 +999,7 @@ class servicosWindow(QMainWindow):
 
         self.bt_Gerar_nova_os.triggered.connect(self.show_cadastroProduto)
         self.bt_fat_os.triggered.connect(self.faturar_pedido)
+        self.bt_del_os.triggered.connect(self.deletar_pedido)
 
         toolbar.addAction(self.bt_Gerar_nova_os)
         toolbar.addAction(self.bt_fat_os)
@@ -1026,6 +1027,38 @@ class servicosWindow(QMainWindow):
         self.setCentralWidget(container)
         self.setFixedSize(QSize(850,600))
 
+    def msg(self, tipo, mensage):
+        msgbox = QMessageBox()
+
+        if tipo.lower() == 'ok':
+            msgbox.setIcon(QMessageBox.Information)
+        elif tipo.lower() == 'ERRO':
+            msgbox.setIcon(QMessageBox.Critical)
+        elif tipo.lower() == 'aviso':
+            msgbox.setIcon(QMessageBox.Warning)
+        
+        msgbox.setText(mensage)
+        msgbox.exec()
+
+    def deletar_pedido(self):
+        if not self.tb_servicos.selectedIndexes():
+          QMessageBox.warning(self, "Erro", "Nenhum registro selecionado!")
+          return
+        msg = QMessageBox()
+        msg.setWindowTitle('Excluir')
+        msg.setText('Este registro será excluído.')
+        msg.setInformativeText('Você tem certeza que deseja continuar?')
+        msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+        resp = msg.exec()
+
+        if resp == QMessageBox.Yes:
+            pedido = self.tb_servicos.selectionModel().currentIndex().siblingAtColumn(0).data()
+            result = self.db.delete_pedido(pedido)
+            self.buscar_pedidos()
+
+            self.msg(result[0], result[1])
+        else:
+            self.msg('erro', 'Exclusão cancelada pelo usuário.')
 
     def show_cadastroProduto(self):
         if  self.w_cadastroServicoWindow.isVisible():
