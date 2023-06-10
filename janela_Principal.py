@@ -1592,7 +1592,6 @@ class HistoricoWindow(QMainWindow):
                  item = QTableWidgetItem(str(valor))
                  self.tb_servicos.setItem(row, col, item)
 
-   
 app = QApplication(sys.argv)
 app.setStyle('Fusion')
 db = Data_base()
