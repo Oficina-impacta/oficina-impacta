@@ -32,10 +32,10 @@ O sistema irá gerenciar vendas de serviços prestados de uma oficina mecânica.
 ### Features
 
 - [x] Cadastro de cliente
-- [ ] Cadastro de produtos
-- [ ] Cadastro de veiculos
-- [ ] Gerar pedido de venda
-- [ ] Gerar relatório de vendas
+- [x] Cadastro de produtos
+- [x] Cadastro de veiculos
+- [x] Gerar pedido de venda
+- [x] Gerar relatório de vendas
 
 # 📁 Acesso ao projeto
 
